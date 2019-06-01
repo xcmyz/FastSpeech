@@ -7,7 +7,7 @@ def visualize(file_name, start, end=-1):
 
     loss_arr = np.array(list())
 
-    cnt = 0
+    # cnt = 0
     with open(file_name, "r") as f_loss:
         for loss in f_loss.readlines():
             # print(loss)

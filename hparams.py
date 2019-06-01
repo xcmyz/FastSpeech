@@ -15,6 +15,9 @@ use_lws = False
 # Text
 text_cleaners = ['english_cleaners']
 
+# Model
+max_sep_len = 2048
+
 # Train
 batch_size = 2
 epochs = 10000

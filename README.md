@@ -7,4 +7,4 @@ The Implementation of FastSpeech Based on Pytorch.
 </div>
 
 ## My Blog
-[FastSpeech阅读笔记](https://zhuanlan.zhihu.com/p/67325775)
+[FastSpeech Reading Notes](https://zhuanlan.zhihu.com/p/67325775)

@@ -24,14 +24,14 @@ class FastSpeech(nn.Module):
         encoder_output, encoder_mask = self.encoder(src_seq, src_pos)
 
         if self.training:
-            length_regulator_output, decoder_pos, duration_predictor_output_cal_loss = self.length_regulator(
+            length_regulator_output, decoder_pos, duration_predictor_output = self.length_regulator(
                 encoder_output, encoder_mask, length_target, alpha)
             decoder_output = self.decoder(length_regulator_output, decoder_pos)
 
             mel_output = self.mel_linear(decoder_output)
             mel_output_postnet = self.postnet(mel_output) + mel_output
 
-            return mel_output, mel_output_postnet, duration_predictor_output_cal_loss
+            return mel_output, mel_output_postnet, duration_predictor_output
         else:
             length_regulator_output, decoder_pos = self.length_regulator(
                 encoder_output, encoder_mask, alpha=alpha)
@@ -68,9 +68,9 @@ if __name__ == "__main__":
     test_fastspeech = FastSpeech()
     # print(test_fastspeech)
 
-    test_mel_output, test_mel_output_postnet, test_duration_predictor_output_cal_loss = test_fastspeech(
+    test_mel_output, test_mel_output_postnet, test_duration_predictor_output = test_fastspeech(
         test_src, test_pos, test_target)
     print(test_mel_output.size())
     print(test_mel_output_postnet.size())
-    print(test_duration_predictor_output_cal_loss.size())
-    print(test_duration_predictor_output_cal_loss)
+    print(test_duration_predictor_output.size())
+    print(test_duration_predictor_output)

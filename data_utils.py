@@ -60,6 +60,7 @@ def collate_fn(batch):
     mels = [d['mel'] for d in batch]
 
     texts, pos_padded = pad_text(texts)
+    # print(pos_padded)
     alignment_target = get_alignment(texts, pos_padded)
     # mels, gate_target, tgt_sep, tgt_pos = pad_mel(mels)
     mels = pad_mel(mels)
@@ -155,4 +156,5 @@ if __name__ == "__main__":
         # Test
         # print(data["tgt_sep"])
         # print(data["tgt_pos"])
-        print(data["pos"])
+        # print(data["pos"])
+        print(data["alignment"])

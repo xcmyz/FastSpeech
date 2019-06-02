@@ -52,8 +52,14 @@ class LengthRegulator(nn.Module):
         max_len = max([input_ele[i].size(0) for i in range(len(input_ele))])
         # print(max_len)
 
-        pos = torch.stack([torch.Tensor([i+1 for i in range(max_len)])
-                           for _ in range(len(input_ele))]).long()
+        # print(input_ele[0].device == "cuda")
+        # print(input_ele[0].is_cuda)
+        if input_ele[0].is_cuda:
+            pos = torch.stack([torch.Tensor([i+1 for i in range(max_len)])
+                               for _ in range(len(input_ele))]).long().cuda()
+        else:
+            pos = torch.stack([torch.Tensor([i+1 for i in range(max_len)])
+                               for _ in range(len(input_ele))]).long()
 
         for i, batch in enumerate(input_ele):
             one_batch_padded = F.pad(
@@ -72,8 +78,8 @@ class LengthRegulator(nn.Module):
         return out_padded, pos
 
     def forward(self, encoder_output, encoder_output_mask, target=None, alpha=1.0):
-        duration_predictor_output_cal_loss = self.duration_predictor(encoder_output,
-                                                                     encoder_output_mask)
+        duration_predictor_output = self.duration_predictor(
+            encoder_output, encoder_output_mask)
         # print(duration_predictor_output_cal_loss)
 
         if self.training:
@@ -83,10 +89,9 @@ class LengthRegulator(nn.Module):
 
             output, decoder_pos = self.LR(encoder_output, target, alpha)
 
-            return output, decoder_pos, duration_predictor_output_cal_loss
+            return output, decoder_pos, duration_predictor_output
         else:
-            duration_predictor_output = torch.exp(
-                duration_predictor_output_cal_loss)
+            # duration_predictor_output = torch.exp(duration_predictor_output)
             # print(duration_predictor_output)
 
             output, decoder_pos = self.LR(
@@ -141,10 +146,11 @@ class DurationPredictor(nn.Module):
         out = out * encoder_output_mask[:, :, 0:1]
         # print(out)
 
-        out = self.relu(out)
+        # out = self.relu(out)
         # print(out)
 
-        out = torch.log(out)
+        # out = torch.log(out)
+        out = torch.exp(out)
         # print("out size:", out.size())
         # print(encoder_output_mask[:, :, 0:1])
         # out = out * encoder_output_mask[:, :, 0:1]

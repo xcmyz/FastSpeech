@@ -2,6 +2,11 @@ import torch
 import torch.nn as nn
 
 
+def cut(A, B, C):
+    min_len = min(A.size(1), B.size(1), C.size(1))
+    return A[:, 0:min_len, :], B[:, 0:min_len, :], C[:, 0:min_len, :]
+
+
 class FastSpeechLoss(nn.Module):
     """ FastSPeech Loss """
 
@@ -11,6 +16,7 @@ class FastSpeechLoss(nn.Module):
 
     def forward(self, mel, mel_postnet, duration_predictor, mel_target, duration_predictor_target):
         mel_target.requires_grad = False
+        mel, mel_postnet, mel_target = cut(mel, mel_postnet, mel_target)
 
         mel_loss = torch.abs(mel - mel_target)
         mel_loss = torch.mean(mel_loss)

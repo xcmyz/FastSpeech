@@ -33,7 +33,8 @@ duration_predictor_kernel_size = 3
 dropout = 0.1
 
 # Train
-batch_size = 2
+n_warm_up_step = 4000
+batch_size = 64
 epochs = 10000
 dataset_path = "dataset"
 logger_path = "logger"
@@ -42,5 +43,5 @@ checkpoint_path = "./model_new"
 grad_clip_thresh = 1.0
 decay_step = [200000, 500000, 1000000]
 save_step = 2000
-log_step = 5
+log_step = 10
 clear_Time = 20

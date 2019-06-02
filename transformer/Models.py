@@ -49,7 +49,6 @@ def get_attn_key_pad_mask(seq_k, seq_q):
 
 
 # def get_subsequent_mask(seq):
-#     # subsequent：随后的
 #     ''' For masking out the subsequent info. '''
 
 #     sz_b, len_s = seq.size()

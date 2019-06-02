@@ -24,12 +24,12 @@ The Implementation of FastSpeech Based on Pytorch.
 - matplotlib 2.2.2
 
 ## Notes
-- You need rewrite `alignment.py` because I didn't provide a pre-trained model to get attention matrix. I suggest you can use [the trained model which published by NVIDIA](https://drive.google.com/file/d/1c5ZTuT7J08wLUoVZ2KkUs_VdZuJ86ZqA/view).
+- You need rewrite `alignment.py` because I didn't provide a pre-trained model to get attention matrix. I suggest you can use [the trained model](https://drive.google.com/file/d/1c5ZTuT7J08wLUoVZ2KkUs_VdZuJ86ZqA/view) which published by NVIDIA.
 - The returned value of `alignment.py` is a tensor whose value is the multiple that encoder's outputs are supposed to be expanded by. For example:
 "`python3
 test_target = torch.stack([torch.Tensor([0, 2, 3, 0, 3, 2, 1, 0, 0, 0]),
                            torch.Tensor([1, 2, 3, 2, 2, 0, 3, 6, 3, 5])])
-"`
+`"
 
 ## Reference
 - [The Implementation of Tacotron Based on Tensorflow](https://github.com/keithito/tacotron)

@@ -10,9 +10,10 @@ The Implementation of FastSpeech Based on Pytorch.
 [FastSpeech Reading Notes](https://zhuanlan.zhihu.com/p/67325775)
 
 ## Train
-1. Put [LJSpeech dataset](https://keithito.com/LJ-Speech-Dataset/) in `data`.
-2. Run `preprocess.py`
-3. Run `train.py`
+1. Download and extract [LJSpeech dataset](https://keithito.com/LJ-Speech-Dataset/)
+2. Put LJSpeech dataset in `data`.
+3. Run `preprocess.py`
+4. Run `train.py`
 
 ## Dependencies
 - python 3.6

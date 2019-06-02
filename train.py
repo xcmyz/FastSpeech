@@ -11,6 +11,7 @@ import math
 from FastSpeech import FastSpeech
 from loss import FastSpeechLoss
 from data_utils import FastSpeechDataset, collate_fn, DataLoader
+from optimizer import ScheduledOptim
 import hparams as hp
 
 
@@ -21,13 +22,19 @@ def main(args):
     # Define model
     model = nn.DataParallel(FastSpeech()).to(device)
     print("Model Has Been Defined")
+    print('Number of FastSpeech Parameters:', sum(param.numel()
+                                                  for param in model.parameters()))
 
     # Get dataset
     dataset = FastSpeechDataset()
 
     # Optimizer and loss
-    optimizer = torch.optim.Adam(model.parameters(), lr=hp.learning_rate)
+    optimizer = torch.optim.Adam(
+        model.parameters(), betas=(0.9, 0.98), eps=1e-9)
+    scheduled_optim = ScheduledOptim(
+        optimizer, hp.word_vec_dim, hp.n_warm_up_step)
     fastspeech_loss = FastSpeechLoss().to(device)
+    print("Defined Optimizer and Loss Function.")
 
     # Get training loader
     print("Get Training Loader")
@@ -39,10 +46,10 @@ def main(args):
             hp.checkpoint_path, 'checkpoint_%d.pth.tar' % args.restore_step))
         model.load_state_dict(checkpoint['model'])
         optimizer.load_state_dict(checkpoint['optimizer'])
-        print("---Model Restored at Step %d---\n" % args.restore_step)
+        print("\n------Model Restored at Step %d------\n" % args.restore_step)
 
     except:
-        print("---Start New Training---\n")
+        print("\n------Start New Training------\n")
         if not os.path.exists(hp.checkpoint_path):
             os.mkdir(hp.checkpoint_path)
 
@@ -65,7 +72,8 @@ def main(args):
                 epoch * len(training_loader) + 1
 
             # Init
-            optimizer.zero_grad()
+            # optimizer.zero_grad()
+            scheduled_optim.zero_grad()
 
             # Prepare Data
             src_seq = data_of_batch["texts"]
@@ -76,12 +84,19 @@ def main(args):
             src_seq = torch.from_numpy(src_seq).long().to(device)
             src_pos = torch.from_numpy(src_pos).long().to(device)
             mel_tgt = torch.from_numpy(mel_tgt).float().to(device)
-            alignment_target = torch.from_numpy(
-                alignment_target).float().to(device)
+            alignment_target = alignment_target.to(device)
 
             # Forward
             mel_output, mel_output_postnet, duration_predictor_output = model(
                 src_seq, src_pos, alignment_target)
+
+            # print(mel_output.size())
+            # print(mel_output_postnet.size())
+            # print(mel_tgt.size())
+            # print()
+            # print(duration_predictor_output.size())
+            # print(alignment_target.size())
+            # print(duration_predictor_output)
 
             # Cal Loss
             mel_loss, mel_postnet_loss, duration_predictor_loss = fastspeech_loss(
@@ -103,7 +118,7 @@ def main(args):
             with open(os.path.join("logger", "mel_postnet_loss.txt"), "a") as f_mel_postnet_loss:
                 f_mel_postnet_loss.write(str(m_p_l)+"\n")
 
-            with open(os.path.join("logger", "duration_predictor_loss_loss.txt"), "a") as f_d_p_loss:
+            with open(os.path.join("logger", "duration_predictor_loss.txt"), "a") as f_d_p_loss:
                 f_d_p_loss.write(str(d_p_l)+"\n")
 
             # Backward
@@ -113,23 +128,32 @@ def main(args):
             nn.utils.clip_grad_norm_(model.parameters(), hp.grad_clip_thresh)
 
             # Update weights
-            optimizer.step()
+            # optimizer.step()
+            scheduled_optim.step_and_update_lr()
 
             # Print
             if current_step % hp.log_step == 0:
                 Now = time.clock()
 
-                str1 = "Epoch [{}/{}], Step [{}/{}], Mel Loss: {:.4f}, Mel PostNet Loss: {:.4f}, Gate Loss: {:.4f}, Total Loss: {:.4f}.".format(
-                    epoch+1, hp.epochs, current_step, total_step, mel_loss.item(), mel_postnet_loss.item(), gate_loss.item(), total_loss.item())
-                str2 = "Time Used: {:.3f}s, Estimated Time Remaining: {:.3f}s.".format(
+                str1 = "Epoch [{}/{}], Step [{}/{}], Mel Loss: {:.4f}, Mel PostNet Loss: {:.4f};".format(
+                    epoch+1, hp.epochs, current_step, total_step, mel_loss.item(), mel_postnet_loss.item())
+                str2 = "Duration Predictor Loss: {:.4f}, Total Loss: {:.4f}.".format(
+                    duration_predictor_loss.item(), total_loss.item())
+                str3 = "Current Learning Rate is {:.6f}.".format(
+                    scheduled_optim._get_lr_scale())
+                str4 = "Time Used: {:.3f}s, Estimated Time Remaining: {:.3f}s.".format(
                     (Now-Start), (total_step-current_step)*np.mean(Time))
 
-                print(str1)
+                print("\n" + str1)
                 print(str2)
+                print(str3)
+                print(str4)
 
                 with open(os.path.join("logger", "logger.txt"), "a") as f_logger:
                     f_logger.write(str1 + "\n")
                     f_logger.write(str2 + "\n")
+                    f_logger.write(str3 + "\n")
+                    f_logger.write(str4 + "\n")
                     f_logger.write("\n")
 
             if current_step % hp.save_step == 0:
@@ -137,8 +161,8 @@ def main(args):
                 )}, os.path.join(hp.checkpoint_path, 'checkpoint_%d.pth.tar' % current_step))
                 print("save model at step %d ..." % current_step)
 
-            if current_step in hp.decay_step:
-                optimizer = adjust_learning_rate(optimizer, current_step)
+            # if current_step in hp.decay_step:
+            #     optimizer = adjust_learning_rate(optimizer, current_step)
 
             end_time = time.clock()
             Time = np.append(Time, end_time - start_time)
@@ -149,20 +173,20 @@ def main(args):
                 Time = np.append(Time, temp_value)
 
 
-def adjust_learning_rate(optimizer, step):
-    if step == hp.decay_step[0]:
-        for param_group in optimizer.param_groups:
-            param_group['lr'] = 0.0005
+# def adjust_learning_rate(optimizer, step):
+#     if step == hp.decay_step[0]:
+#         for param_group in optimizer.param_groups:
+#             param_group['lr'] = 0.0005
 
-    elif step == hp.decay_step[1]:
-        for param_group in optimizer.param_groups:
-            param_group['lr'] = 0.0003
+#     elif step == hp.decay_step[1]:
+#         for param_group in optimizer.param_groups:
+#             param_group['lr'] = 0.0003
 
-    elif step == hp.decay_step[2]:
-        for param_group in optimizer.param_groups:
-            param_group['lr'] = 0.0001
+#     elif step == hp.decay_step[2]:
+#         for param_group in optimizer.param_groups:
+#             param_group['lr'] = 0.0001
 
-    return optimizer
+#     return optimizer
 
 
 if __name__ == "__main__":

@@ -17,6 +17,11 @@ text_cleaners = ['english_cleaners']
 
 # Model
 max_sep_len = 2048
+encoder_output_size = 384
+duration_predictor_filter_size = 256
+duration_predictor_kernel_size = 3
+dropout = 0.1
+
 
 # Train
 batch_size = 2

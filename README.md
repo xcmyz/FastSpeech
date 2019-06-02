@@ -25,7 +25,7 @@ The Implementation of FastSpeech Based on Pytorch.
 - matplotlib 2.2.2
 
 ## Notes
-- You need rewrite `alignment.py` because I didn't provide a pre-trained model to get attention matrix. I suggest you can use [the trained model](https://drive.google.com/file/d/1c5ZTuT7J08wLUoVZ2KkUs_VdZuJ86ZqA/view) which published by NVIDIA.
+- You need rewrite `alignment.py` because I didn't provide a pre-trained model to get attention matrix. I suggest you can use [the trained Tacotron2 model](https://drive.google.com/file/d/1c5ZTuT7J08wLUoVZ2KkUs_VdZuJ86ZqA/view) which published by NVIDIA.
 - The returned value of `alignment.py` is a tensor whose value is the multiple that encoder's outputs are supposed to be expanded by.
 - For example: 
 ```python

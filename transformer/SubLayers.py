@@ -1,10 +1,9 @@
-''' Define the sublayers in encoder/decoder layer '''
-import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
-from transformer.Modules import ScaledDotProductAttention
+import numpy as np
 
-__author__ = "Yu-Hsiang Huang"
+from transformer.Modules import ScaledDotProductAttention
+import hparams as hp
 
 
 class MultiHeadAttention(nn.Module):
@@ -77,15 +76,25 @@ class PositionwiseFeedForward(nn.Module):
         super().__init__()
 
         # Use Conv1D
-        self.w_1 = nn.Conv1d(d_in, d_hid, 1)  # position-wise
-        self.w_2 = nn.Conv1d(d_hid, d_in, 1)  # position-wise
+
+        # position-wise
+        self.w_1 = nn.Conv1d(
+            d_in, d_hid, kernel_size=hp.fft_conv1d_kernel, padding=hp.fft_conv1d_padding)
+        # position-wise
+        self.w_2 = nn.Conv1d(
+            d_hid, d_in, kernel_size=hp.fft_conv1d_kernel, padding=hp.fft_conv1d_padding)
 
         self.layer_norm = nn.LayerNorm(d_in)
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
         residual = x
+        # print("x:", x.size())
         output = x.transpose(1, 2)
+
+        # test = self.w_1(output)
+        # print("test:", test.size())
+
         output = self.w_2(F.relu(self.w_1(output)))
         output = output.transpose(1, 2)
         output = self.dropout(output)

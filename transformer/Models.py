@@ -67,14 +67,14 @@ class Encoder(nn.Module):
     def __init__(self,
                  n_src_vocab=len(symbols)+1,
                  len_max_seq=hp.max_sep_len,
-                 d_word_vec=512,
-                 n_layers=6,
-                 n_head=8,
+                 d_word_vec=hp.word_vec_dim,
+                 n_layers=hp.encoder_n_layer,
+                 n_head=hp.encoder_head,
                  d_k=64,
                  d_v=64,
-                 d_model=512,
-                 d_inner=2048,
-                 dropout=0.1):
+                 d_model=hp.word_vec_dim,
+                 d_inner=hp.encoder_conv1d_filter_size,
+                 dropout=hp.dropout):
 
         super(Encoder, self).__init__()
 
@@ -99,6 +99,9 @@ class Encoder(nn.Module):
         slf_attn_mask = get_attn_key_pad_mask(seq_k=src_seq, seq_q=src_seq)
         non_pad_mask = get_non_pad_mask(src_seq)
 
+        # print("slf_attn_mask:\n", slf_attn_mask)
+        # print("non_pad_mask:\n", non_pad_mask)
+
         # -- Forward
         # print(src_pos)
         enc_output = self.src_word_emb(src_seq) + self.position_enc(src_pos)
@@ -113,9 +116,10 @@ class Encoder(nn.Module):
             if return_attns:
                 enc_slf_attn_list += [enc_slf_attn]
 
-        if return_attns:
-            return enc_output, enc_slf_attn_list
-        return enc_output,
+        # if return_attns:
+        #     return enc_output, enc_slf_attn_list
+
+        return enc_output, non_pad_mask
 
 
 # class Decoder(nn.Module):
@@ -192,14 +196,14 @@ class Decoder(nn.Module):
 
     def __init__(self,
                  len_max_seq=hp.max_sep_len,
-                 d_word_vec=512,
-                 n_layers=6,
-                 n_head=8,
+                 d_word_vec=hp.word_vec_dim,
+                 n_layers=hp.decoder_n_layer,
+                 n_head=hp.decoder_head,
                  d_k=64,
                  d_v=64,
-                 d_model=512,
-                 d_inner=2048,
-                 dropout=0.1):
+                 d_model=hp.word_vec_dim,
+                 d_inner=hp.decoder_conv1d_filter_size,
+                 dropout=hp.dropout):
 
         super(Decoder, self).__init__()
 
@@ -221,8 +225,8 @@ class Decoder(nn.Module):
         dec_slf_attn_list = []
 
         # -- Prepare masks
-        slf_attn_mask = get_attn_key_pad_mask(seq_k=enc_seq, seq_q=enc_seq)
-        non_pad_mask = get_non_pad_mask(enc_seq)
+        slf_attn_mask = get_attn_key_pad_mask(seq_k=enc_pos, seq_q=enc_pos)
+        non_pad_mask = get_non_pad_mask(enc_pos)
 
         # -- Forward
         dec_output = enc_seq + self.position_enc(enc_pos)
@@ -235,9 +239,10 @@ class Decoder(nn.Module):
             if return_attns:
                 dec_slf_attn_list += [dec_slf_attn]
 
-        if return_attns:
-            return dec_output, dec_slf_attn_list
-        return dec_output,
+        # if return_attns:
+        #     return dec_output, dec_slf_attn_list
+
+        return dec_output
 
 
 # class Transformer(nn.Module):

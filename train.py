@@ -40,8 +40,12 @@ def main(args):
 
     # Get training loader
     print("Get Training Loader")
-    training_loader = DataLoader(dataset, batch_size=hp.batch_size, shuffle=True,
-                                 collate_fn=collate_fn, drop_last=True, num_workers=cpu_count())
+    training_loader = DataLoader(dataset,
+                                 batch_size=hp.batch_size,
+                                 shuffle=True,
+                                 collate_fn=collate_fn,
+                                 drop_last=True,
+                                 num_workers=cpu_count())
 
     try:
         checkpoint = torch.load(os.path.join(
@@ -77,18 +81,31 @@ def main(args):
             # optimizer.zero_grad()
             scheduled_optim.zero_grad()
 
-            # Prepare Data
-            src_seq = data_of_batch["texts"]
-            src_pos = data_of_batch["pos"]
-            mel_tgt = data_of_batch["mels"]
-            # alignment_target = data_of_batch["alignment"]
+            if not hp.pre_target:
+                # Prepare Data
+                src_seq = data_of_batch["texts"]
+                src_pos = data_of_batch["pos"]
+                mel_tgt = data_of_batch["mels"]
+                # alignment_target = data_of_batch["alignment"]
 
-            src_seq = torch.from_numpy(src_seq).long().to(device)
-            src_pos = torch.from_numpy(src_pos).long().to(device)
-            mel_tgt = torch.from_numpy(mel_tgt).float().to(device)
-            alignment_target = get_alignment(
-                src_seq, tacotron2).float().to(device)
-            # print(alignment_target)
+                src_seq = torch.from_numpy(src_seq).long().to(device)
+                src_pos = torch.from_numpy(src_pos).long().to(device)
+                mel_tgt = torch.from_numpy(mel_tgt).float().to(device)
+                alignment_target = get_alignment(
+                    src_seq, tacotron2).float().to(device)
+                # print(alignment_target)
+            else:
+                # Prepare Data
+                src_seq = data_of_batch["texts"]
+                src_pos = data_of_batch["pos"]
+                mel_tgt = data_of_batch["mels"]
+                alignment_target = data_of_batch["alignment"]
+
+                src_seq = torch.from_numpy(src_seq).long().to(device)
+                src_pos = torch.from_numpy(src_pos).long().to(device)
+                mel_tgt = torch.from_numpy(mel_tgt).float().to(device)
+                alignment_target = torch.from_numpy(
+                    alignment_target).float().to(device)
 
             # Forward
             mel_output, mel_output_postnet, duration_predictor_output = model(

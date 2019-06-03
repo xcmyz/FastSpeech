@@ -21,7 +21,7 @@ The Implementation of FastSpeech Based on Pytorch.
 8. Run `train.py`.
 9. The outputs of mel spectrogram and alignment are shown as follow:
 <div align="center">
-<img src="img/test_tacotron.jpg">
+<img src="img/test_tacotron2.jpg">
 </div>
 
 ## Dependencies

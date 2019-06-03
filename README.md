@@ -35,7 +35,7 @@ The Implementation of FastSpeech Based on Pytorch.
 
 ## Notes
 - If you don't prepare the target of alignment before training, the process of training would be very long.
-- In the paper of Transformer-TTS, authors use pre-trained Transformer-TTS to provide the target of alignment. I didn't have a well-trained Transformer-TTS model so I use Tacotron2 instead.
+- In the paper of FastSpeech, authors use pre-trained Transformer-TTS to provide the target of alignment. I didn't have a well-trained Transformer-TTS model so I use Tacotron2 instead.
 - If you want to use another model to get targets of alignment, you need rewrite `alignment.py`.
 - The returned value of `alignment.py` is a tensor whose value is the multiple that encoder's outputs are supposed to be expanded by.
 - For example: 

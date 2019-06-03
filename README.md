@@ -17,7 +17,11 @@ The Implementation of FastSpeech Based on Pytorch.
 4. If you want to get the target of alignment before training(It will speed up the training process greatly), you need download the pre-trained Tacotron2 model published by NVIDIA [here](https://drive.google.com/uc?export=download&confirm=XAHL&id=1c5ZTuT7J08wLUoVZ2KkUs_VdZuJ86ZqA).
 5. Put the pre-trained Tacotron2 model in `Tacotron2/pre_trained_model`
 6. Run `alignment.py`, it will take long time.
-7. Change ```python pre_target = True``` in `hparam.py`.
+7. Change 
+```python 
+pre_target = True
+``` 
+in `hparam.py`.
 8. Run `train.py`.
 
 ## Dependencies

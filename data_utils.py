@@ -6,7 +6,11 @@ import os
 
 from text import text_to_sequence
 import hparams as hp
-from alignment import get_alignment
+# from alignment import get_alignment
+import Tacotron2.hparams as hp_tacotron2
+import Tacotron2.model as model_tacotron2
+import Tacotron2.layers as layers_tacotron2
+import Tacotron2.train as train_tacotron2
 
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -16,6 +20,8 @@ class FastSpeechDataset(Dataset):
     """ LJSpeech """
 
     def __init__(self, dataset_path=hp.dataset_path):
+        # self.tacotron2 = tacotron2
+
         self.dataset_path = dataset_path
         self.text_path = os.path.join(self.dataset_path, "train.txt")
         self.text = process_text(self.text_path)
@@ -32,6 +38,8 @@ class FastSpeechDataset(Dataset):
         character = self.text[idx]
         character = text_to_sequence(character, hp.text_cleaners)
         character = np.array(character)
+
+        # alignment = get_alignment(character)
 
         return {"text": character, "mel": mel_np}
 
@@ -58,14 +66,20 @@ def process_text(train_text_path):
 def collate_fn(batch):
     texts = [d['text'] for d in batch]
     mels = [d['mel'] for d in batch]
+    # alignment_target = [d["alignment"] for d in batch]
 
     texts, pos_padded = pad_text(texts)
     # print(pos_padded)
-    alignment_target = get_alignment(texts, pos_padded)
+    # alignment_target = get_alignment(texts, pos_padded)
+
+    # texts = torch.from_numpy(texts).cuda().long()
+    # print(texts.size())
+
+    # alignment_target = get_alignment(texts[0:1])
     # mels, gate_target, tgt_sep, tgt_pos = pad_mel(mels)
     mels = pad_mel(mels)
 
-    return {"texts": texts, "pos": pos_padded, "mels": mels, "alignment": alignment_target}
+    return {"texts": texts, "pos": pos_padded, "mels": mels}
 
 
 def pad_text(inputs):
@@ -144,7 +158,20 @@ def pad_mel(inputs):
 
 if __name__ == "__main__":
     # Test
+    # hparams = hp_tacotron2.create_hparams()
+    # hparams.sampling_rate = hp.sample_rate
+
+    # checkpoint_path = os.path.join("Tacotron2", os.path.join(
+    #     "pre_trained_model", "tacotron2_statedict.pt"))
+
+    # tacotron2 = train_tacotron2.load_model(hparams)
+    # tacotron2.load_state_dict(torch.load(checkpoint_path)["state_dict"])
+    # # print(tacotron2)
+    # _ = tacotron2.cuda().eval().half()
+    # print("#######################")
+
     dataset = FastSpeechDataset()
+    # print("#######################")
     training_loader = DataLoader(dataset,
                                  batch_size=2,
                                  shuffle=True,
@@ -157,4 +184,5 @@ if __name__ == "__main__":
         # print(data["tgt_sep"])
         # print(data["tgt_pos"])
         # print(data["pos"])
-        print(data["alignment"])
+        # print(len(data["alignment"]))
+        print(np.shape(data["texts"]))

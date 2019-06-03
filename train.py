@@ -12,6 +12,7 @@ from FastSpeech import FastSpeech
 from loss import FastSpeechLoss
 from data_utils import FastSpeechDataset, collate_fn, DataLoader
 from optimizer import ScheduledOptim
+from alignment import get_alignment, get_tacotron2
 import hparams as hp
 
 
@@ -21,9 +22,10 @@ def main(args):
 
     # Define model
     model = nn.DataParallel(FastSpeech()).to(device)
-    print("Model Has Been Defined")
-    print('Number of FastSpeech Parameters:', sum(param.numel()
-                                                  for param in model.parameters()))
+    tacotron2 = get_tacotron2()
+    print("FastSpeech and Tacotron2 Have Been Defined")
+    num_param = sum(param.numel() for param in model.parameters())
+    print('Number of FastSpeech Parameters:', num_param)
 
     # Get dataset
     dataset = FastSpeechDataset()
@@ -79,12 +81,14 @@ def main(args):
             src_seq = data_of_batch["texts"]
             src_pos = data_of_batch["pos"]
             mel_tgt = data_of_batch["mels"]
-            alignment_target = data_of_batch["alignment"]
+            # alignment_target = data_of_batch["alignment"]
 
             src_seq = torch.from_numpy(src_seq).long().to(device)
             src_pos = torch.from_numpy(src_pos).long().to(device)
             mel_tgt = torch.from_numpy(mel_tgt).float().to(device)
-            alignment_target = alignment_target.to(device)
+            alignment_target = get_alignment(
+                src_seq, tacotron2).float().to(device)
+            # print(alignment_target)
 
             # Forward
             mel_output, mel_output_postnet, duration_predictor_output = model(

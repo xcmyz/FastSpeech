@@ -8,7 +8,7 @@ The Implementation of FastSpeech Based on Pytorch.
 
 ## My Blog
 - [FastSpeech Reading Notes(Chinese)](https://zhuanlan.zhihu.com/p/67325775)
-- [Details of this Implementation](https://zhuanlan.zhihu.com/p/67325775)
+- [Details and Rethinking of this Implementation](https://zhuanlan.zhihu.com/p/67939482)
 
 ## Train
 1. Download and extract [LJSpeech dataset](https://keithito.com/LJ-Speech-Dataset/).

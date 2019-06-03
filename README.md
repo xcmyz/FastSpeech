@@ -19,7 +19,7 @@ The Implementation of FastSpeech Based on Pytorch.
 6. Run `alignment.py`, it will take long time.
 7. Change `pre_target = True` in `hparam.py`.
 8. Run `train.py`.
-9. The outputs of mel spectrogram and alignment are shown as follow:
+9. The tacotron2 outputs of mel spectrogram and alignment are shown as follow:
 <div align="center">
 <img src="img/test_tacotron2.jpg">
 </div>

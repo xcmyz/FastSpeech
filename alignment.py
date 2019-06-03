@@ -160,6 +160,69 @@ def get_alignment(texts, tacotron2):
     return out
 
 
+def process_text(train_text_path):
+    with open(train_text_path, "r", encoding="utf-8") as f:
+        inx = 0
+        txt = []
+        for line in f.readlines():
+            cnt = 0
+            for index, ele in enumerate(line):
+                if ele == '|':
+                    cnt = cnt + 1
+                    if cnt == 2:
+                        inx = index
+                        end = len(line)
+                        # print(line)
+                        txt.append(line[inx+1:end-1])
+                        break
+
+        return txt
+
+
 if __name__ == "__main__":
     # Test
-    get_tacotron2_alignment_test("Hello world!")
+    # get_tacotron2_alignment_test("Hello world!")
+
+    # ------Get All Alignment------ #
+
+    tacotron2 = get_tacotron2()
+    texts = process_text(os.path.join(hp.dataset_path, "train.txt"))
+    # alignment_target = list()
+
+    if not os.path.exists(hp.alignment_target_path):
+        os.mkdir(hp.alignment_target_path)
+
+    for i, text in enumerate(texts):
+        seq = np.array(text_to_sequence(text, hp.text_cleaners))[None, :]
+        seq = torch.autograd.Variable(torch.from_numpy(seq)).cuda().long()
+        # print(seq)
+
+        # alignment_target.append(get_one_alignment(
+        #     seq, tacotron2).numpy().tolist())
+        one_ele = get_one_alignment(seq, tacotron2).numpy().tolist()
+        np.save(os.path.join(hp.alignment_target_path,
+                             str(i)+".npy"), np.array(one_ele))
+        # print(alignment_target)
+        print("item:", i)
+
+        # if i == 10:
+        #     break
+
+    # with open(hp.alignment_target_path, "w", encoding="utf-8") as f:
+    #     for one_ele in alignment_target:
+    #         f.write(str(one_ele) + "\n")
+
+    # with open(hp.alignment_target_path, "r", encoding="utf-8") as f:
+    #     for line in f.readlines():
+    #         print(line)
+
+    # if not os.path.exists(hp.alignment_target_path):
+    #     os.mkdir(hp.alignment_target_path)
+
+    # for index, one_ele in enumerate(alignment_target):
+    #     np.save(os.path.join(hp.alignment_target_path,
+    #                          str(index)+".npy"), np.array(one_ele))
+
+    # for file_name in os.listdir(hp.alignment_target_path):
+    #     arr = np.load(os.path.join(hp.alignment_target_path, file_name))
+    #     print(arr)

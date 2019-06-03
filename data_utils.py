@@ -41,7 +41,14 @@ class FastSpeechDataset(Dataset):
 
         # alignment = get_alignment(character)
 
-        return {"text": character, "mel": mel_np}
+        if not hp.pre_target:
+            return {"text": character, "mel": mel_np}
+        else:
+            alignment = np.load(os.path.join(
+                hp.alignment_target_path, str(idx)+".npy"))
+            # print(np.shape(alignment))
+            # print(alignment)
+            return {"text": character, "mel": mel_np, "alignment": alignment}
 
 
 def process_text(train_text_path):
@@ -66,20 +73,21 @@ def process_text(train_text_path):
 def collate_fn(batch):
     texts = [d['text'] for d in batch]
     mels = [d['mel'] for d in batch]
-    # alignment_target = [d["alignment"] for d in batch]
 
-    texts, pos_padded = pad_text(texts)
-    # print(pos_padded)
-    # alignment_target = get_alignment(texts, pos_padded)
+    if not hp.pre_target:
 
-    # texts = torch.from_numpy(texts).cuda().long()
-    # print(texts.size())
+        texts, pos_padded = pad_text(texts)
+        mels = pad_mel(mels)
 
-    # alignment_target = get_alignment(texts[0:1])
-    # mels, gate_target, tgt_sep, tgt_pos = pad_mel(mels)
-    mels = pad_mel(mels)
+        return {"texts": texts, "pos": pos_padded, "mels": mels}
+    else:
+        alignment_target = [d["alignment"] for d in batch]
 
-    return {"texts": texts, "pos": pos_padded, "mels": mels}
+        texts, pos_padded = pad_text(texts)
+        alignment_target = pad_alignment(alignment_target)
+        mels = pad_mel(mels)
+
+        return {"texts": texts, "pos": pos_padded, "mels": mels, "alignment": alignment_target}
 
 
 def pad_text(inputs):
@@ -99,6 +107,22 @@ def pad_text(inputs):
     pos_padded = np.stack([pad_data(x, max_len)[1] for x in inputs])
 
     return text_padded, pos_padded
+
+
+def pad_alignment(alignment):
+
+    def pad_data(x, length):
+        pad = 0
+        x_padded = np.pad(
+            x, (0, length - x.shape[0]), mode='constant', constant_values=pad)
+
+        return x_padded
+
+    max_len = max((len(x) for x in alignment))
+
+    alignment_padded = np.stack([pad_data(x, max_len) for x in alignment])
+
+    return alignment_padded
 
 
 def pad_mel(inputs):
@@ -174,7 +198,7 @@ if __name__ == "__main__":
     # print("#######################")
     training_loader = DataLoader(dataset,
                                  batch_size=2,
-                                 shuffle=True,
+                                 shuffle=False,
                                  collate_fn=collate_fn,
                                  drop_last=True,
                                  num_workers=1)
@@ -185,4 +209,10 @@ if __name__ == "__main__":
         # print(data["tgt_pos"])
         # print(data["pos"])
         # print(len(data["alignment"]))
-        print(np.shape(data["texts"]))
+
+        if not hp.pre_target:
+            print(np.shape(data["texts"]))
+        else:
+            print(np.shape(data["alignment"]))
+            print(np.shape(data["texts"]))
+            # print(data["alignment"])

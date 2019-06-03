@@ -33,11 +33,13 @@ duration_predictor_kernel_size = 3
 dropout = 0.1
 
 # Train
+pre_target = True
 n_warm_up_step = 4000
 batch_size = 2
 epochs = 10000
 dataset_path = "dataset"
 logger_path = "logger"
+alignment_target_path = "alignment_targets"
 learning_rate = 1e-3
 checkpoint_path = "./model_new"
 grad_clip_thresh = 1.0

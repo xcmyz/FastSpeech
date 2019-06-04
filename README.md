@@ -23,6 +23,7 @@ The Implementation of FastSpeech Based on Pytorch.
 <div align="center">
 <img src="img/test_tacotron2.jpg">
 </div>
+10. This Implementation supports data-parallel now.
 
 ## Dependencies
 - python 3.6

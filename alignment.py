@@ -1,7 +1,8 @@
 # You need a reliable model for alignment.
-# For test, Multiply three there.
 
 # ------Test------ #
+
+# For test, Multiply three there.
 
 # import torch
 # import numpy as np
@@ -43,7 +44,6 @@ def get_tacotron2():
 
     tacotron2 = train_tacotron2.load_model(hparams)
     tacotron2.load_state_dict(torch.load(checkpoint_path)["state_dict"])
-    # print(tacotron2)
     _ = tacotron2.cuda().eval().half()
 
     return tacotron2
@@ -52,11 +52,8 @@ def get_tacotron2():
 def plot_data(data, figsize=(16, 4)):
     _, axes = plt.subplots(1, len(data), figsize=figsize)
     for i in range(len(data)):
-        # print("###############")
         axes[i].imshow(data[i], aspect='auto',
                        origin='bottom', interpolation='none')
-        # plt.show()
-    # plt.show()
     plt.savefig(os.path.join("img", "test_tacotron2.jpg"))
 
 
@@ -79,42 +76,18 @@ def get_tacotron2_alignment_test(text_seq):
 
     tacotron2 = train_tacotron2.load_model(hparams)
     tacotron2.load_state_dict(torch.load(checkpoint_path)["state_dict"])
-    # print(tacotron2)
     _ = tacotron2.cuda().eval().half()
 
-    # sequence = text_seq[None, :]
     sequence = np.array(text_to_sequence(text_seq, hp.text_cleaners))[None, :]
-    # zeros_pad = np.zeros([1, 12])
-    # sequence = np.concatenate((sequence, zeros_pad), axis=1)
     print("sequence size", np.shape(sequence))
 
     sequence = torch.autograd.Variable(
         torch.from_numpy(sequence)).cuda().long()
-    # print(sequence.size())
-    # sequence = torch.autograd.Variable(
-    #     torch.from_numpy(text_seq).cuda().long())
-    # sequence = torch.autograd.Variable(text_seq)
 
     mel, mel_postnet, _, alignment = tacotron2.inference(sequence)
 
-    # print(sequence.size())
-    # print(alignment.size())
-
-    # Test Mel
-    # print(mel_postnet.size())
-    # plot_data((mel.float().data.cpu().numpy()[0],
-    #            mel_postnet.float().data.cpu().numpy()[0],
-    #            alignment.float().data.cpu().numpy()[0].T))
-
-    # mel_postnet = mel_postnet.float().data.cpu().numpy()[0].T
-    # wav = audio.inv_mel_spectrogram(mel_postnet)
-    # audio.save_wav(wav, "test.wav")
-    # plot_data((mel_postnet))
-
-    # print(alignment.size())
     alignment = alignment.float().data.cpu().numpy()[0]
     print("alignment size", np.shape(alignment))
-    # print(alignment)
 
     get_D(alignment)
 
@@ -126,25 +99,17 @@ def get_D(alignment):
 
     for i in range(np.shape(alignment)[0]):
         max_index = alignment[i].tolist().index(alignment[i].max())
-        # print(max_index)
         D[max_index] = D[max_index] + 1
 
-    # print(D)
-    # cnt = 0
     for i in range(np.shape(D)[0]):
-        # cnt += D[i]
         if D[i] > 0:
             D[i] = D[i] - 1
-    # print(cnt)
-    # print(D)
 
     return D
 
 
 def get_one_alignment(text, tacotron2):
-    # Test
     alignment = get_tacotron2_alignment(text, tacotron2)
-    # print(alignment)
     D = get_D(alignment)
     D = torch.from_numpy(D)
 
@@ -152,10 +117,8 @@ def get_one_alignment(text, tacotron2):
 
 
 def get_alignment(texts, tacotron2):
-    # print(texts.size(0))
     out = torch.stack([get_one_alignment(texts[i:i+1], tacotron2)
                        for i in range(texts.size(0))])
-    # print(out.size())
 
     return out
 
@@ -172,57 +135,7 @@ def process_text(train_text_path):
                     if cnt == 2:
                         inx = index
                         end = len(line)
-                        # print(line)
                         txt.append(line[inx+1:end-1])
                         break
 
         return txt
-
-
-if __name__ == "__main__":
-    # Test
-    # get_tacotron2_alignment_test("Hello world!")
-
-    # ------Get All Alignment------ #
-
-    tacotron2 = get_tacotron2()
-    texts = process_text(os.path.join(hp.dataset_path, "train.txt"))
-    # alignment_target = list()
-
-    if not os.path.exists(hp.alignment_target_path):
-        os.mkdir(hp.alignment_target_path)
-
-    for i, text in enumerate(texts):
-        seq = np.array(text_to_sequence(text, hp.text_cleaners))[None, :]
-        seq = torch.autograd.Variable(torch.from_numpy(seq)).cuda().long()
-        # print(seq)
-
-        # alignment_target.append(get_one_alignment(
-        #     seq, tacotron2).numpy().tolist())
-        one_ele = get_one_alignment(seq, tacotron2).numpy().tolist()
-        np.save(os.path.join(hp.alignment_target_path,
-                             str(i)+".npy"), np.array(one_ele))
-        # print(alignment_target)
-        print("item:", i)
-
-        # if i == 10:
-        #     break
-
-    # with open(hp.alignment_target_path, "w", encoding="utf-8") as f:
-    #     for one_ele in alignment_target:
-    #         f.write(str(one_ele) + "\n")
-
-    # with open(hp.alignment_target_path, "r", encoding="utf-8") as f:
-    #     for line in f.readlines():
-    #         print(line)
-
-    # if not os.path.exists(hp.alignment_target_path):
-    #     os.mkdir(hp.alignment_target_path)
-
-    # for index, one_ele in enumerate(alignment_target):
-    #     np.save(os.path.join(hp.alignment_target_path,
-    #                          str(index)+".npy"), np.array(one_ele))
-
-    # for file_name in os.listdir(hp.alignment_target_path):
-    #     arr = np.load(os.path.join(hp.alignment_target_path, file_name))
-    #     print(arr)

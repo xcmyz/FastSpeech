@@ -49,7 +49,6 @@ def visualize(total_loss_file_name, mel_loss_file_name, mel_postnet_loss_file_na
     plt.xlabel("sequence number")
     plt.ylabel("loss item")
     plt.title("loss")
-    # plt.show()
     plt.savefig("loss.jpg")
 
 

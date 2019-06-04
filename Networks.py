@@ -3,7 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from collections import OrderedDict
 
-# from transformer.Layers import Conv
 import hparams as hp
 
 
@@ -15,14 +14,17 @@ class LengthRegulator(nn.Module):
 
         self.duration_predictor = DurationPredictor()
 
-    def LR(self, encoder_output, duration_predictor_output, alpha):
+    def LR(self, encoder_output, duration_predictor_output, alpha, mel_max_length=None):
         output = list()
 
         for i in range(encoder_output.size(0)):
             output.append(self.expand(
                 encoder_output[i], duration_predictor_output[i], alpha))
 
-        output, dec_pos = self.pad(output)
+        if mel_max_length:
+            output, dec_pos = self.pad(output, mel_max_length)
+        else:
+            output, dec_pos = self.pad(output)
 
         return output, dec_pos
 
@@ -34,7 +36,6 @@ class LengthRegulator(nn.Module):
             pad_length.append(self.rounding(ele.data*alpha))
 
         for i, ele in enumerate(one_batch):
-            # Remember cut one
             [out.append(ele) for _ in range(pad_length[i] + 1)]
 
         out = torch.stack(out)
@@ -47,52 +48,67 @@ class LengthRegulator(nn.Module):
         else:
             return int(num)
 
-    def pad(self, input_ele):
-        out_list = list()
-        max_len = max([input_ele[i].size(0) for i in range(len(input_ele))])
-        # print(max_len)
+    def pad(self, input_ele, mel_max_length=None):
+        if mel_max_length:
+            out_list = list()
+            max_len = mel_max_length
 
-        # print(input_ele[0].device == "cuda")
-        # print(input_ele[0].is_cuda)
-        if input_ele[0].is_cuda:
-            pos = torch.stack([torch.Tensor([i+1 for i in range(max_len)])
-                               for _ in range(len(input_ele))]).long().cuda()
+            if input_ele[0].is_cuda:
+                pos = torch.stack([torch.Tensor([i+1 for i in range(max_len)])
+                                   for _ in range(len(input_ele))]).long().cuda()
+            else:
+                pos = torch.stack([torch.Tensor([i+1 for i in range(max_len)])
+                                   for _ in range(len(input_ele))]).long()
+
+            for i, batch in enumerate(input_ele):
+                one_batch_padded = F.pad(
+                    batch, (0, 0, 0, max_len-batch.size(0)), "constant", 0.0)
+                out_list.append(one_batch_padded)
+
+                for ind in range(max_len-batch.size(0)):
+                    pos[i][batch.size(0)+ind] = 0
+
+            out_padded = torch.stack(out_list)
+            pos = pos.long()
+
+            return out_padded, pos
         else:
-            pos = torch.stack([torch.Tensor([i+1 for i in range(max_len)])
-                               for _ in range(len(input_ele))]).long()
+            out_list = list()
+            max_len = max([input_ele[i].size(0)
+                           for i in range(len(input_ele))])
 
-        for i, batch in enumerate(input_ele):
-            one_batch_padded = F.pad(
-                batch, (0, 0, 0, max_len-batch.size(0)), "constant", 0.0)
-            # print(batch.size())
-            # print(max_len-batch.size(0))
-            # print(one_batch_padded.size())
-            out_list.append(one_batch_padded)
+            if input_ele[0].is_cuda:
+                pos = torch.stack([torch.Tensor([i+1 for i in range(max_len)])
+                                   for _ in range(len(input_ele))]).long().cuda()
+            else:
+                pos = torch.stack([torch.Tensor([i+1 for i in range(max_len)])
+                                   for _ in range(len(input_ele))]).long()
 
-            for ind in range(max_len-batch.size(0)):
-                pos[i][batch.size(0)+ind] = 0
+            for i, batch in enumerate(input_ele):
+                one_batch_padded = F.pad(
+                    batch, (0, 0, 0, max_len-batch.size(0)), "constant", 0.0)
+                out_list.append(one_batch_padded)
 
-        out_padded = torch.stack(out_list)
-        pos = pos.long()
+                for ind in range(max_len-batch.size(0)):
+                    pos[i][batch.size(0)+ind] = 0
 
-        return out_padded, pos
+            out_padded = torch.stack(out_list)
+            pos = pos.long()
 
-    def forward(self, encoder_output, encoder_output_mask, target=None, alpha=1.0):
+            return out_padded, pos
+
+    def forward(self, encoder_output, encoder_output_mask, target=None, alpha=1.0, mel_max_length=None):
         duration_predictor_output = self.duration_predictor(
             encoder_output, encoder_output_mask)
-        # print(duration_predictor_output_cal_loss)
 
         if self.training:
-            # duration_predictor_output = torch.exp(
-            #     duration_predictor_output_cal_loss)
-            # print(duration_predictor_output)
-
-            output, decoder_pos = self.LR(encoder_output, target, alpha)
+            output, decoder_pos = self.LR(
+                encoder_output, target, alpha, mel_max_length)
 
             return output, decoder_pos, duration_predictor_output
         else:
-            # duration_predictor_output = torch.exp(duration_predictor_output)
-            # print(duration_predictor_output)
+            duration_predictor_output = torch.exp(duration_predictor_output)
+            duration_predictor_output = duration_predictor_output - 1
 
             output, decoder_pos = self.LR(
                 encoder_output, duration_predictor_output, alpha)
@@ -134,29 +150,13 @@ class DurationPredictor(nn.Module):
 
     def forward(self, encoder_output, encoder_output_mask):
         encoder_output = encoder_output * encoder_output_mask
-        # print(encoder_output.size())
-        # print(encoder_output)
-        # encoder_output = encoder_output.contiguous().transpose(1, 2)
 
         out = self.conv_layer(encoder_output)
-        # out = out.contiguous().transpose(1, 2)
-        # print(out.size())
-
         out = self.linear_layer(out)
         out = out * encoder_output_mask[:, :, 0:1]
-        # print(out)
 
-        # out = self.relu(out)
-        # print(out)
-
-        # out = torch.log(out)
-        out = torch.exp(out)
-        # print("out size:", out.size())
-        # print(encoder_output_mask[:, :, 0:1])
-        # out = out * encoder_output_mask[:, :, 0:1]
+        out = self.relu(out)
         out = out.squeeze()
-        # print("out size:", out.size())
-        # print(out)
 
         return out
 
@@ -227,38 +227,3 @@ class Linear(nn.Module):
 
     def forward(self, x):
         return self.linear_layer(x)
-
-
-if __name__ == "__main__":
-    # Test
-    test_LR = LengthRegulator()
-    # print(test_LR)
-
-    test_encoder_output = torch.randn(2, 10, 384)
-    test_encoder_output_mask_1 = torch.ones(2, 6, 1)
-    test_encoder_output_mask_2 = torch.zeros(2, 4, 1)
-    test_encoder_output_mask = torch.cat(
-        (test_encoder_output_mask_1, test_encoder_output_mask_2), 1)
-    test_target = torch.stack([torch.Tensor([0, 2, 3, 0, 3, 2, 1, 0, 5, 6]),
-                               torch.Tensor([1, 2, 3, 0, 0, 2, 2, 0, 3, 6])])
-
-    test_output, test_decoder_pos, _ = test_LR(
-        test_encoder_output, test_encoder_output_mask, test_target)
-    # print(test_output.size())
-    # print(test_decoder_pos)
-
-    test_LR = LengthRegulator().eval()
-    # print(test_LR)
-
-    test_encoder_output = torch.randn(2, 10, 384)
-    test_encoder_output_mask_1 = torch.ones(2, 6, 384)
-    test_encoder_output_mask_2 = torch.zeros(2, 4, 384)
-    test_encoder_output_mask = torch.cat(
-        (test_encoder_output_mask_1, test_encoder_output_mask_2), 1)
-    # test_target = torch.stack([torch.Tensor([0, 2, 3, 0, 3, 2, 1, 0, 5, 6]),
-    #                            torch.Tensor([1, 2, 3, 0, 0, 2, 2, 0, 3, 6])])
-
-    test_output, test_decoder_pos = test_LR(
-        test_encoder_output, test_encoder_output_mask)
-    # print(test_output.size())
-    # print(test_decoder_pos)

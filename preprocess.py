@@ -1,34 +1,17 @@
-# import argparse
 import os
 from multiprocessing import cpu_count
 from tqdm import tqdm
-# from datasets import blizzard, ljspeech
-# from datasets import ljspeech
 import hparams
-# from data import audio, ljspeech
 from data import ljspeech
 
 
-# def preprocess_blizzard(args):
-#   in_dir = os.path.join(args.base_dir, 'Blizzard2012')
-#   out_dir = os.path.join(args.base_dir, args.output)
-#   os.makedirs(out_dir, exist_ok=True)
-#   metadata = blizzard.build_from_path(in_dir, out_dir, args.num_workers, tqdm=tqdm)
-#   write_metadata(metadata, out_dir)
-
-
-# def preprocess_ljspeech(args):
 def preprocess_ljspeech(filename):
-    # in_dir = os.path.join(args.base_dir, 'LJSpeech-1.1')
-    # in_dir = "LJSpeech-1.1"
     in_dir = filename
-    # out_dir = os.path.join(args.base_dir, args.output)
     out_dir = "dataset"
     if not os.path.exists(out_dir):
         os.makedirs(out_dir, exist_ok=True)
     metadata = ljspeech.build_from_path(
         in_dir, out_dir, cpu_count(), tqdm=tqdm)
-    # metadata = ljspeech.build_from_path(in_dir, out_dir)
     write_metadata(metadata, out_dir)
 
 
@@ -45,20 +28,6 @@ def write_metadata(metadata, out_dir):
 
 
 def main():
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument('--base_dir', default=os.path.expanduser('~/tacotron'))
-    # parser.add_argument('--output', default='training')
-    # parser.add_argument('--dataset', required=True, choices=['blizzard', 'ljspeech'])
-    # parser.add_argument('--num_workers', type=int, default=cpu_count())
-    # args = parser.parse_args()
-    # if args.dataset == 'blizzard':
-    #   preprocess_blizzard(args)
-    # elif args.dataset == 'ljspeech':
-    #   preprocess_ljspeech(args)
-
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument('--num_workers', type=int, default=cpu_count())
-    # args = parser.parse_args()
     path = os.path.join("data", "LJSpeech-1.1")
     preprocess_ljspeech(path)
 

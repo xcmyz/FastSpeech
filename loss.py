@@ -25,6 +25,8 @@ class FastSpeechLoss(nn.Module):
         mel_postnet_loss = torch.mean(mel_postnet_loss)
 
         duration_predictor_target.requires_grad = False
+        duration_predictor_target = duration_predictor_target + 1
+        duration_predictor_target = torch.log(duration_predictor_target)
 
         duration_predictor_loss = self.mse_loss(
             duration_predictor, duration_predictor_target)

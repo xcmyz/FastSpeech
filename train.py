@@ -91,6 +91,7 @@ def main(args):
                 mel_tgt = torch.from_numpy(mel_tgt).float().to(device)
                 alignment_target = get_alignment(
                     src_seq, tacotron2).float().to(device)
+                # For Data Parallel
                 mel_max_len = mel_tgt.size(1)
             else:
                 # Prepare Data
@@ -104,6 +105,7 @@ def main(args):
                 mel_tgt = torch.from_numpy(mel_tgt).float().to(device)
                 alignment_target = torch.from_numpy(
                     alignment_target).float().to(device)
+                # For Data Parallel
                 mel_max_len = mel_tgt.size(1)
 
             # Forward

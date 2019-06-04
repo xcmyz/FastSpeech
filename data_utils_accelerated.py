@@ -133,3 +133,67 @@ def pad_mel(inputs):
     mel_output = np.stack([pad(x, max_len) for x in inputs])
 
     return mel_output
+
+
+class data_prefetcher():
+    def __init__(self, loader):
+        self.loader = iter(loader)
+        self.stream = torch.cuda.Stream()
+        self.preload()
+
+    def preload(self):
+        try:
+            data = next(self.loader)
+            if hp.pre_target:
+                self.next_texts = data["texts"]
+                self.next_pos = data["pos"]
+                self.next_mels = data["mels"]
+                self.next_alignment = data["alignment"]
+            else:
+                self.next_texts = data["texts"]
+                self.next_pos = data["pos"]
+                self.next_mels = data["mels"]
+        except StopIteration:
+            if hp.pre_target:
+                self.next_texts = None
+                self.next_pos = None
+                self.next_mels = None
+                self.next_alignment = None
+            else:
+                self.next_texts = None
+                self.next_pos = None
+                self.next_mels = None
+            return
+        with torch.cuda.stream(self.stream):
+            if hp.pre_target:
+                self.next_texts = torch.from_numpy(
+                    self.next_texts).long().to(device)
+                self.next_pos = torch.from_numpy(
+                    self.next_pos).long().to(device)
+                self.next_mels = torch.from_numpy(
+                    self.next_mels).float().to(device)
+                self.next_alignment = torch.from_numpy(
+                    self.next_alignment).float().to(device)
+            else:
+                self.next_texts = torch.from_numpy(
+                    self.next_texts).long().to(device)
+                self.next_pos = torch.from_numpy(
+                    self.next_pos).long().to(device)
+                self.next_mels = torch.from_numpy(
+                    self.next_mels).float().to(device)
+
+    def next(self):
+        torch.cuda.current_stream().wait_stream(self.stream)
+        if hp.pre_target:
+            texts = self.next_texts
+            pos = self.next_pos
+            mels = self.next_mels
+            alignment = self.next_alignment
+            self.preload()
+            return texts, pos, mels, alignment
+        else:
+            texts = self.next_texts
+            pos = self.next_pos
+            mels = self.next_mels
+            self.preload()
+            return texts, pos, mels

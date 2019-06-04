@@ -26,7 +26,7 @@ The Implementation of FastSpeech Based on Pytorch.
 Run `train.py`.
 
 #### Turbo Mode
-Run `train_accelerated.py`[^1]
+Run `train_accelerated.py`.
 
 ## Dependencies
 - python 3.6

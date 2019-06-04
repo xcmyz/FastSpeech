@@ -23,7 +23,7 @@ The Implementation of FastSpeech Based on Pytorch.
 10. This Implementation supports data-parallel now.
 11. The tacotron2 outputs of mel spectrogram and alignment are shown as follow:
 <div align="center">
-<img src="img/test_tacotron2.jpg">
+<img src="img/tacotron2_outputs.jpg">
 </div>
 
 ## Dependencies

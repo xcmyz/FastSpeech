@@ -90,6 +90,9 @@ def get_tacotron2_alignment_test(text_seq):
                mel_postnet.float().data.cpu().numpy()[0],
                alignment.float().data.cpu().numpy()[0].T))
 
+    wav = audio.inv_mel_spectrogram(mel_postnet.float().data.cpu().numpy()[0])
+    audio.save_wav(wav, "test.wav")
+
     alignment = alignment.float().data.cpu().numpy()[0]
     print("alignment size", np.shape(alignment))
 

@@ -86,6 +86,10 @@ def get_tacotron2_alignment_test(text_seq):
 
     mel, mel_postnet, _, alignment = tacotron2.inference(sequence)
 
+    plot_data((mel.float().data.cpu().numpy()[0],
+               mel_postnet.float().data.cpu().numpy()[0],
+               alignment.float().data.cpu().numpy()[0].T))
+
     alignment = alignment.float().data.cpu().numpy()[0]
     print("alignment size", np.shape(alignment))
 
@@ -139,3 +143,10 @@ def process_text(train_text_path):
                         break
 
         return txt
+
+
+if __name__ == "__main__":
+    # Test
+    alignment = get_tacotron2_alignment_test(
+        "I want to go to CMU to do research on deep learning.")
+    print(alignment)

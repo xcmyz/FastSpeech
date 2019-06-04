@@ -27,6 +27,7 @@ Run `train.py`.
 
 #### Turbo Mode
 Run `train_accelerated.py`[^1]
+
 [^1]: prefetch training data and may cost more memory.
 
 ## Dependencies

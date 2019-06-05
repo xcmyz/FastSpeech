@@ -33,8 +33,10 @@ def main(args):
     # Optimizer and loss
     optimizer = torch.optim.Adam(
         model.parameters(), betas=(0.9, 0.98), eps=1e-9)
-    scheduled_optim = ScheduledOptim(
-        optimizer, hp.word_vec_dim, hp.n_warm_up_step)
+    scheduled_optim = ScheduledOptim(optimizer,
+                                     hp.word_vec_dim,
+                                     hp.n_warm_up_step,
+                                     args.restore_step)
     fastspeech_loss = FastSpeechLoss().to(device)
     print("Defined Optimizer and Loss Function.")
 

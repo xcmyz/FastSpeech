@@ -146,7 +146,11 @@ def main(args):
             nn.utils.clip_grad_norm_(model.parameters(), hp.grad_clip_thresh)
 
             # Update weights
-            scheduled_optim.step_and_update_lr()
+            if args.frozen_learning_rate:
+                scheduled_optim.step_and_update_lr_frozen(
+                    args.learning_rate_frozen)
+            else:
+                scheduled_optim.step_and_update_lr()
 
             # Print
             if current_step % hp.log_step == 0:
@@ -157,7 +161,7 @@ def main(args):
                 str2 = "Duration Predictor Loss: {:.4f}, Total Loss: {:.4f}.".format(
                     duration_predictor_loss.item(), total_loss.item())
                 str3 = "Current Learning Rate is {:.6f}.".format(
-                    scheduled_optim._get_lr_scale())
+                    scheduled_optim.get_learning_rate())
                 str4 = "Time Used: {:.3f}s, Estimated Time Remaining: {:.3f}s.".format(
                     (Now-Start), (total_step-current_step)*np.mean(Time))
 
@@ -190,8 +194,9 @@ def main(args):
 if __name__ == "__main__":
     # Main
     parser = argparse.ArgumentParser()
-    parser.add_argument('--restore_step', type=int,
-                        help='checkpoint', default=0)
+    parser.add_argument('--restore_step', type=int, default=0)
+    parser.add_argument('--frozen_learning_rate', type=bool, default=False)
+    parser.add_argument("--learning_rate_frozen", type=float, default=1e-3)
     args = parser.parse_args()
 
     main(args)

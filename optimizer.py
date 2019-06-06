@@ -10,9 +10,21 @@ class ScheduledOptim():
         self.n_current_steps = current_steps
         self.init_lr = np.power(d_model, -0.5)
 
+    def step_and_update_lr_frozen(self, learning_rate_frozen):
+        for param_group in self._optimizer.param_groups:
+            param_group['lr'] = learning_rate_frozen
+        self._optimizer.step()
+
     def step_and_update_lr(self):
         self._update_learning_rate()
         self._optimizer.step()
+
+    def get_learning_rate(self):
+        learning_rate = 0.0
+        for param_group in self._optimizer.param_groups:
+            learning_rate = param_group['lr']
+
+        return learning_rate
 
     def zero_grad(self):
         # print(self.init_lr)

@@ -25,4 +25,4 @@ def visualize(file_name, start, end=-1):
 
 if __name__ == "__main__":
     # Test
-    visualize("total_loss.txt", 7000)
+    visualize("total_loss.txt", 0)

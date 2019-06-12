@@ -40,7 +40,10 @@ def synthesis_total_model(text_seq, model):
 
     wav = audio.inv_mel_spectrogram(mel_postnet)
     print("Wav Have Been Synthesized.")
-    audio.save_wav(wav, "result.wav")
+
+    if not os.path.exists("results"):
+        os.mkdir("results")
+    audio.save_wav(wav, os.path.join("results", text_seq + ".wav"))
 
 
 if __name__ == "__main__":

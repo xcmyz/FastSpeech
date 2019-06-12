@@ -34,6 +34,7 @@ class LengthRegulator(nn.Module):
 
         for ele in predicted:
             pad_length.append(self.rounding(ele.data*alpha))
+        # print(pad_length)
 
         for i, ele in enumerate(one_batch):
             [out.append(ele) for _ in range(pad_length[i] + 1)]
@@ -100,6 +101,7 @@ class LengthRegulator(nn.Module):
     def forward(self, encoder_output, encoder_output_mask, target=None, alpha=1.0, mel_max_length=None):
         duration_predictor_output = self.duration_predictor(
             encoder_output, encoder_output_mask)
+        # print(duration_predictor_output)
 
         if self.training:
             output, decoder_pos = self.LR(
@@ -109,6 +111,7 @@ class LengthRegulator(nn.Module):
         else:
             duration_predictor_output = torch.exp(duration_predictor_output)
             duration_predictor_output = duration_predictor_output - 1
+            # print(duration_predictor_output)
 
             output, decoder_pos = self.LR(
                 encoder_output, duration_predictor_output, alpha)
@@ -156,7 +159,11 @@ class DurationPredictor(nn.Module):
         out = out * encoder_output_mask[:, :, 0:1]
 
         out = self.relu(out)
+
         out = out.squeeze()
+
+        if not self.training:
+            out = out.unsqueeze(0)
 
         return out
 

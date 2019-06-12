@@ -55,6 +55,6 @@ if __name__ == "__main__":
     model.load_state_dict(checkpoint['model'])
     print("Model Have Been Loaded.")
 
-    words = "Hello! Long time no see!"
+    words = "I want to go to CMU to do research on deep learning."
     synthesis_total_model(words, model, alpha=1.0, mode="normal")
     print("Synthesized.")

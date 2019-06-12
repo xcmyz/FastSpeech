@@ -21,7 +21,7 @@ def plot_data(data, figsize=(12, 4)):
     plt.savefig(os.path.join("img", "model_test.jpg"))
 
 
-def synthesis_total_model(text_seq, model):
+def synthesis_total_model(text_seq, model, alpha=1.0, mode=""):
     text = text_to_sequence(text_seq, hp.text_cleaners)
     text = text + [0]
     text = np.stack([np.array(text)])
@@ -32,7 +32,7 @@ def synthesis_total_model(text_seq, model):
 
     model.eval()
     with torch.no_grad():
-        mel, mel_postnet = model(text, pos)
+        mel, mel_postnet = model(text, pos, alpha=alpha)
 
     mel = mel[0].cpu().numpy().T
     mel_postnet = mel_postnet[0].cpu().numpy().T
@@ -43,7 +43,7 @@ def synthesis_total_model(text_seq, model):
 
     if not os.path.exists("results"):
         os.mkdir("results")
-    audio.save_wav(wav, os.path.join("results", text_seq + ".wav"))
+    audio.save_wav(wav, os.path.join("results", text_seq + mode + ".wav"))
 
 
 if __name__ == "__main__":
@@ -54,4 +54,7 @@ if __name__ == "__main__":
         hp.checkpoint_path, 'checkpoint_%d.pth.tar' % step_num))
     model.load_state_dict(checkpoint['model'])
     print("Model Have Been Loaded.")
-    synthesis_total_model("I am very happy to see you again.", model)
+
+    words = "Hello! Long time no see!"
+    synthesis_total_model(words, model, alpha=1.0, mode="normal")
+    print("Synthesized.")

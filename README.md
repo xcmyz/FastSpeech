@@ -53,7 +53,7 @@ Run `train_accelerated.py`.
 
 ## Test
 ### Synthesize
-Run `sythesis.py`.
+Run `synthesis.py`.
 
 ### Results
 - The examples of audio are in `results`. The sentence for synthesizing is "I am very happy to see you again.". `results/normal.wav` was synthesized when `alpha = 1.0`, `results/slow.wav` was synthesized when `alpha = 1.5` and `results/quick.wav` was synthesized when `alpha = 0.5`.

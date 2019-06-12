@@ -49,12 +49,12 @@ def synthesis_total_model(text_seq, model, alpha=1.0, mode=""):
 if __name__ == "__main__":
     # Test
     model = nn.DataParallel(FastSpeech()).to(device)
-    step_num = 136000
+    step_num = 138000
     checkpoint = torch.load(os.path.join(
         hp.checkpoint_path, 'checkpoint_%d.pth.tar' % step_num))
     model.load_state_dict(checkpoint['model'])
     print("Model Have Been Loaded.")
 
-    words = "I want to go to CMU to do research on deep learning."
-    synthesis_total_model(words, model, alpha=1.0, mode="normal")
+    words = "I am very happy to see you again."
+    synthesis_total_model(words, model, alpha=1.5, mode="slow")
     print("Synthesized.")

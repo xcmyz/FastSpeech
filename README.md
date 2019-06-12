@@ -38,7 +38,7 @@ Change `pre_target = False` in `hparam.py`
 2. Put the pre-trained Tacotron2 model in `Tacotron2/pre_trained_model`
 3. Run `alignment.py`, it will spend 7 hours training on NVIDIA RTX2080ti.
 
-#### Use Calculated Alignment
+#### Use Calculated Alignment (quick)
 I provide LJSpeech's alignments calculated by Tacotron2 in `alignment_targets.zip`. If you want to use it, just unzip it.
 
 ## Run (Support Data Parallel)

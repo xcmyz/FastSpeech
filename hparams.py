@@ -35,12 +35,13 @@ dropout = 0.1
 # Train
 pre_target = True
 n_warm_up_step = 4000
+learning_rate = 1e-3
 batch_size = 64
 epochs = 10000
 dataset_path = "dataset"
 logger_path = "logger"
 alignment_target_path = "./alignment_targets"
-learning_rate = 1e-3
+waveglow_path = "./model_waveglow"
 checkpoint_path = "./model_new"
 grad_clip_thresh = 1.0
 decay_step = [200000, 500000, 1000000]

@@ -35,15 +35,15 @@ def visualize(total_loss_file_name, mel_loss_file_name, mel_postnet_loss_file_na
 
     plt.plot(x, y, color="r", lw=0.7, label="mel loss")
 
-    gate_loss_arr = np.array(list())
-    with open(mel_postnet_loss_file_name, "r") as f_gate_loss:
-        for loss in f_gate_loss.readlines():
-            gate_loss_arr = np.append(gate_loss_arr, float(loss))
+    # gate_loss_arr = np.array(list())
+    # with open(mel_postnet_loss_file_name, "r") as f_gate_loss:
+    #     for loss in f_gate_loss.readlines():
+    #         gate_loss_arr = np.append(gate_loss_arr, float(loss))
 
-    x = np.array([i for i in range(np.shape(gate_loss_arr)[0])])
-    y = cut_arr(gate_loss_arr)
+    # x = np.array([i for i in range(np.shape(gate_loss_arr)[0])])
+    # y = cut_arr(gate_loss_arr)
 
-    plt.plot(x, y, color="b", lw=0.7, label="mel postnet loss")
+    # plt.plot(x, y, color="b", lw=0.7, label="mel postnet loss")
 
     plt.legend()
     plt.xlabel("sequence number")

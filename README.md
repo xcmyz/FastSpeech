@@ -1,6 +1,13 @@
 # FastSpeech-Pytorch (2019/10/23 update)
 The Implementation of FastSpeech Based on Pytorch.
 
+## Update
+1. Fix bugs in alignment;
+2. Fix bugs in transformer;
+3. Fix bugs in LengthRegulator;
+4. Change the way to process audio;
+5. Use waveglow to synthesize.
+
 ## Model
 <div align="center">
 <img src="img/model.png">

@@ -42,7 +42,7 @@ Run `python train.py`.
 Run `python synthesis.py`.
 
 ## Pretrained Model
-[Step:112000](https://1drv.ms/u/s!AuC2oR4FhoZ29krLj1notn-RImwB?e=Wuwz9P)
+[Step:112000](https://pan.baidu.com/s/1by3-8t3A6uihK8K9IFZ7rg) Enter Code: xpk7
 
 ## Notes
 - In the paper of FastSpeech, authors use pre-trained Transformer-TTS to provide the target of alignment. I didn't have a well-trained Transformer-TTS model so I use Tacotron2 instead.

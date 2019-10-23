@@ -44,6 +44,7 @@ Run `python synthesis.py`.
 <div align="center">
 <img src="img/tacotron2_outputs.jpg">
 </div>
+
 - The outputs of FastSpeech and Tacotron2 (Right one is tacotron2) are shown as follows (The sentence for synthesizing is "Printing, in the only sense with which we are at present concerned, differs from most if not from all the arts and crafts represented in the Exhibition."):
 <div align="center">
 <img src="img/model_test.jpg">

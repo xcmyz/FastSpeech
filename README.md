@@ -42,7 +42,7 @@ Run `python train.py`.
 Run `python synthesis.py`.
 
 ## Pretrained Model
-[Step:112000](https://1drv.ms/b/s!AuC2oR4FhoZ2gkdNyq3Iq8fupHB9?e=3EyVAa)
+[Step:112000](https://1drv.ms/u/s!AuC2oR4FhoZ29krLj1notn-RImwB?e=Wuwz9P)
 
 ## Notes
 - In the paper of FastSpeech, authors use pre-trained Transformer-TTS to provide the target of alignment. I didn't have a well-trained Transformer-TTS model so I use Tacotron2 instead.

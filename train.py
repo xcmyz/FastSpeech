@@ -186,7 +186,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--restore_step', type=int, default=0)
-    parser.add_argument('--frozen_learning_rate', type=bool, default=True)
+    parser.add_argument('--frozen_learning_rate', type=bool, default=False)
     parser.add_argument("--learning_rate_frozen", type=float, default=1e-3)
     args = parser.parse_args()
 

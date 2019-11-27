@@ -11,6 +11,8 @@ from Audio.audio_processing import dynamic_range_compression
 from Audio.audio_processing import dynamic_range_decompression
 from Audio.audio_processing import window_sumsquare
 
+use_cuda = torch.cuda.is_available()
+device = torch.device('cuda' if use_cuda else 'cpu')
 
 class STFT(torch.nn.Module):
     """adapted from Prem Seetharaman's https://github.com/pseeth/pytorch-stft"""
@@ -63,8 +65,8 @@ class STFT(torch.nn.Module):
         input_data = input_data.squeeze(1)
 
         forward_transform = F.conv1d(
-            input_data.cuda(),
-            Variable(self.forward_basis, requires_grad=False).cuda(),
+            input_data.to(device),
+            Variable(self.forward_basis, requires_grad=False).to(device),
             stride=self.hop_length,
             padding=0).cpu()
 
@@ -98,7 +100,7 @@ class STFT(torch.nn.Module):
                 np.where(window_sum > tiny(window_sum))[0])
             window_sum = torch.autograd.Variable(
                 torch.from_numpy(window_sum), requires_grad=False)
-            window_sum = window_sum.cuda() if magnitude.is_cuda else window_sum
+            window_sum = window_sum.to(device) if magnitude.is_cuda else window_sum
             inverse_transform[:, :,
                               approx_nonzero_indices] /= window_sum[approx_nonzero_indices]
 

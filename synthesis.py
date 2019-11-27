@@ -21,7 +21,7 @@ def get_FastSpeech(num):
     checkpoint_path = "checkpoint_" + str(num) + ".pth.tar"
     model = nn.DataParallel(FastSpeech()).to(device)
     model.load_state_dict(torch.load(os.path.join(
-        hp.checkpoint_path, checkpoint_path))['model'])
+        hp.checkpoint_path, checkpoint_path), map_location=device)['model'])
     model.eval()
 
     return model
@@ -35,9 +35,9 @@ def synthesis(model, text, alpha=1.0):
     src_pos = np.stack([src_pos])
     with torch.no_grad():
         sequence = torch.autograd.Variable(
-            torch.from_numpy(text)).cuda().long()
+            torch.from_numpy(text)).to(device).long()
         src_pos = torch.autograd.Variable(
-            torch.from_numpy(src_pos)).cuda().long()
+            torch.from_numpy(src_pos)).to(device).long()
 
         mel, mel_postnet = model.module.forward(sequence, src_pos, alpha=alpha)
 
@@ -69,6 +69,6 @@ if __name__ == "__main__":
     tacotron2 = utils.get_Tacotron2()
     mel_tac2, _, _ = utils.load_data_from_tacotron2(words, tacotron2)
     waveglow.inference.inference(torch.stack([torch.from_numpy(
-        mel_tac2).cuda()]), wave_glow, os.path.join("results", "tacotron2.wav"))
+        mel_tac2).to(device)]), wave_glow, os.path.join("results", "tacotron2.wav"))
 
     utils.plot_data([mel.numpy(), mel_postnet.numpy(), mel_tac2])

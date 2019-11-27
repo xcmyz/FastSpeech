@@ -10,6 +10,8 @@ import Tacotron2
 import text
 import hparams
 
+use_cuda = torch.cuda.is_available()
+device = torch.device('cuda' if use_cuda else 'cpu') 
 
 def process_text(train_text_path):
     with open(train_text_path, "r", encoding="utf-8") as f:
@@ -40,7 +42,7 @@ def get_mask_from_lengths(lengths, max_len=None):
     if max_len == None:
         max_len = torch.max(lengths).item()
 
-    ids = torch.arange(0, max_len, out=torch.cuda.LongTensor(max_len))
+    ids = torch.arange(0, max_len, out=torch.cuda.LongTensor(max_len) if use_cuda else torch.LongTensor(max_len))
     mask = (ids < lengths.unsqueeze(1)).byte()
 
     return mask
@@ -49,9 +51,9 @@ def get_mask_from_lengths(lengths, max_len=None):
 def get_WaveGlow():
     waveglow_path = os.path.join("waveglow", "pretrained_model")
     waveglow_path = os.path.join(waveglow_path, "waveglow_256channels.pt")
-    wave_glow = torch.load(waveglow_path)['model']
+    wave_glow = torch.load(waveglow_path, map_location=device)['model']
     wave_glow = wave_glow.remove_weightnorm(wave_glow)
-    wave_glow.cuda().eval()
+    wave_glow.to(device).eval()
     for m in wave_glow.modules():
         if 'Conv' in str(type(m)):
             setattr(m, 'padding_mode', 'zeros')
@@ -65,9 +67,9 @@ def get_Tacotron2():
         "Tacotron2", "pretrained_model"), checkpoint_path)
 
     model = Tacotron2.model.Tacotron2(
-        Tacotron2.hparams.create_hparams()).cuda()
-    model.load_state_dict(torch.load(checkpoint_path)['state_dict'])
-    _ = model.cuda().eval()
+        Tacotron2.hparams.create_hparams()).to(device)
+    model.load_state_dict(torch.load(checkpoint_path, map_location=device)['state_dict'])
+    _ = model.to(device).eval()
 
     return model
 
@@ -142,12 +144,12 @@ def pad(input_ele, mel_max_length=None):
 
 def load_data(txt, mel, model):
     character = text.text_to_sequence(txt, hparams.text_cleaners)
-    character = torch.from_numpy(np.stack([np.array(character)])).long().cuda()
+    character = torch.from_numpy(np.stack([np.array(character)])).long().to(device)
 
-    text_length = torch.Tensor([character.size(1)]).long().cuda()
-    mel = torch.from_numpy(np.stack([mel.T])).float().cuda()
+    text_length = torch.Tensor([character.size(1)]).long().to(device)
+    mel = torch.from_numpy(np.stack([mel.T])).float().to(device)
     max_len = mel.size(2)
-    output_length = torch.Tensor([max_len]).long().cuda()
+    output_length = torch.Tensor([max_len]).long().to(device)
 
     inputs = character, text_length, mel, max_len, output_length
 
@@ -167,7 +169,7 @@ def load_data(txt, mel, model):
 
 def load_data_from_tacotron2(txt, model):
     character = text.text_to_sequence(txt, hparams.text_cleaners)
-    character = torch.from_numpy(np.stack([np.array(character)])).long().cuda()
+    character = torch.from_numpy(np.stack([np.array(character)])).long().to(device)
 
     with torch.no_grad():
         [_, mel, _, alignment], cemb = model.inference(character)

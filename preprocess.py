@@ -38,6 +38,8 @@ def main():
 
     if not os.path.exists(hp.alignment_path):
         os.mkdir(hp.alignment_path)
+    else:
+        return
 
     tacotron2 = get_Tacotron2()
 

@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-import Transformer.Constants as Constants
+import transformer.Constants as Constants
 
 
 class Beam():

@@ -2,7 +2,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 
-from Transformer.Modules import ScaledDotProductAttention
+from transformer.Modules import ScaledDotProductAttention
 import hparams as hp
 
 
@@ -76,7 +76,6 @@ class PositionwiseFeedForward(nn.Module):
         super().__init__()
 
         # Use Conv1D
-
         # position-wise
         self.w_1 = nn.Conv1d(
             d_in, d_hid, kernel_size=hp.fft_conv1d_kernel, padding=hp.fft_conv1d_padding)

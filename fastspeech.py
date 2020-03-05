@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 
-from Transformer.Models import Encoder, Decoder
-from Transformer.Layers import Linear, PostNet
+from transformer.Models import Encoder, Decoder
+from transformer.Layers import Linear, PostNet
 from modules import LengthRegulator
 import hparams as hp
 

@@ -10,7 +10,7 @@ from fastspeech import FastSpeech
 from text import text_to_sequence
 import hparams as hp
 import utils
-import Audio
+import audio as Audio
 import glow
 import waveglow
 

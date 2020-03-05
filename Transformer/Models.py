@@ -2,8 +2,8 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-import Transformer.Constants as Constants
-from Transformer.Layers import FFTBlock, PreNet, PostNet, Linear
+import transformer.Constants as Constants
+from transformer.Layers import FFTBlock, PreNet, PostNet, Linear
 from text.symbols import symbols
 import hparams as hp
 

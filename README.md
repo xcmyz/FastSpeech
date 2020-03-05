@@ -1,7 +1,8 @@
-# FastSpeech-Pytorch (2019/10/23 update)
+# FastSpeech-Pytorch
 The Implementation of FastSpeech Based on Pytorch.
 
 ## Update
+### 2019/10/23
 1. Fix bugs in alignment;
 2. Fix bugs in transformer;
 3. Fix bugs in LengthRegulator;

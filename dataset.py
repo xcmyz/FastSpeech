@@ -7,7 +7,7 @@ import math
 import os
 
 import hparams
-import Audio
+import audio as Audio
 from text import text_to_sequence
 from utils import process_text, pad_1D, pad_2D
 

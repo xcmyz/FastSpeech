@@ -1,6 +1,6 @@
 import numpy as np
 import os
-import Audio
+import audio as Audio
 
 
 def build_from_path(in_dir, out_dir):

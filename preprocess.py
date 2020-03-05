@@ -8,7 +8,7 @@ from utils import process_text, load_data
 from data import ljspeech
 import hparams as hp
 import waveglow
-import Audio
+import audio as Audio
 
 
 def preprocess_ljspeech(filename):

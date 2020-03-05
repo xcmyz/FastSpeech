@@ -3,8 +3,8 @@ import torch
 from torch.autograd import Variable
 from torch import nn
 from torch.nn import functional as F
-from Tacotron2.layers import ConvNorm, LinearNorm
-from Tacotron2.utils import to_gpu, get_mask_from_lengths
+from tacotron2.layers import ConvNorm, LinearNorm
+from tacotron2.utils import to_gpu, get_mask_from_lengths
 
 
 class LocationLayer(nn.Module):

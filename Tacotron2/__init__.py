@@ -1,3 +1,3 @@
-import Tacotron2.hparams
-import Tacotron2.model
-import Tacotron2.layers
+import tacotron2.hparams
+import tacotron2.model
+import tacotron2.layers

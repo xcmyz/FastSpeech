@@ -6,7 +6,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import os
 
-import Tacotron2
+import tacotron2 as Tacotron2
 import text
 import hparams
 

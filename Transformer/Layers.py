@@ -4,7 +4,7 @@ from torch.nn import functional as F
 import numpy as np
 from collections import OrderedDict
 
-from Transformer.SubLayers import MultiHeadAttention, PositionwiseFeedForward
+from transformer.SubLayers import MultiHeadAttention, PositionwiseFeedForward
 from text.symbols import symbols
 
 

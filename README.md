@@ -22,12 +22,14 @@ The Implementation of FastSpeech Based on Pytorch.
 ### Dependencies
 - python 3.6
 - CUDA 10.0
-- pytorch 1.1.0
-- numpy 1.16.2
-- scipy 1.2.1
-- librosa 0.6.3
-- inflect 2.1.0
-- matplotlib 2.2.2
+
+
+- pytorch==1.1.0
+- nump==1.16.2
+- scipy==1.2.1
+- librosa==0.6.3
+- inflect==2.1.0
+- matplotlib==2.2.2
 
 ### Prepare Dataset
 1. Download and extract [LJSpeech dataset](https://keithito.com/LJ-Speech-Dataset/).

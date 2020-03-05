@@ -108,7 +108,7 @@ __pycache__
 .DS_Store
 
 
-data/
+data/train.txt
 model_new/
 mels/
 alignments/

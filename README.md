@@ -11,7 +11,7 @@ The Implementation of FastSpeech Based on Pytorch.
 
 ## Model
 <div align="center">
-<img src="img/model.png">
+<img src="img/model.png" style="max-width:100%;">
 </div>
 
 ## My Blog
@@ -32,9 +32,11 @@ The Implementation of FastSpeech Based on Pytorch.
 ### Prepare Dataset
 1. Download and extract [LJSpeech dataset](https://keithito.com/LJ-Speech-Dataset/).
 2. Put LJSpeech dataset in `data`.
-3. Put [Nvidia pretrained Tacotron2 model](https://drive.google.com/file/d/1c5ZTuT7J08wLUoVZ2KkUs_VdZuJ86ZqA/view?usp=sharing) in the `Tacotron2/pretrained_model`;
+3. Unzip `alignments.zip` \*
 4. Put [Nvidia pretrained waveglow model](https://drive.google.com/file/d/1WsibBTsuRg_SF2Z6L6NFRTT-NjEy1oTx/view?usp=sharing) in the `waveglow/pretrained_model`;
 5. Run `python preprocess.py`.
+
+*\* if you want to calculate alignment, don't unzip alignments.zip and put [Nvidia pretrained Tacotron2 model](https://drive.google.com/file/d/1c5ZTuT7J08wLUoVZ2KkUs_VdZuJ86ZqA/view?usp=sharing) in the `Tacotron2/pretrained_model`*
 
 ## Training
 Run `python train.py`.
@@ -51,12 +53,12 @@ Run `python synthesis.py`.
 - The examples of audio are in `results`.
 - The outputs and alignment of Tacotron2 are shown as follows (The sentence for synthesizing is "I want to go to CMU to do research on deep learning."):
 <div align="center">
-<img src="img/tacotron2_outputs.jpg">
+<img src="img/tacotron2_outputs.jpg" style="max-width:100%;">
 </div>
 
 - The outputs of FastSpeech and Tacotron2 (Right one is tacotron2) are shown as follows (The sentence for synthesizing is "Printing, in the only sense with which we are at present concerned, differs from most if not from all the arts and crafts represented in the Exhibition."):
 <div align="center">
-<img src="img/model_test.jpg">
+<img src="img/model_test.jpg" style="max-width:100%;">
 </div>
 
 ## Reference

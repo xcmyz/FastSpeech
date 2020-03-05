@@ -106,3 +106,9 @@ venv.bak/
 __pycache__
 .vscode
 .DS_Store
+
+
+data/
+model_new/
+mels/
+alignments/

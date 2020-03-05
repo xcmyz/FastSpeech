@@ -38,7 +38,7 @@ checkpoint_path = "./model_new"
 logger_path = "./logger"
 mel_ground_truth = "./mels"
 
-batch_size = 8
+batch_size = 64
 epochs = 1000
 n_warm_up_step = 4000
 

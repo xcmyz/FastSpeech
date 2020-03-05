@@ -22,8 +22,6 @@ The Implementation of FastSpeech Based on Pytorch.
 ### Dependencies
 - python 3.6
 - CUDA 10.0
-
-
 - pytorch==1.1.0
 - nump==1.16.2
 - scipy==1.2.1

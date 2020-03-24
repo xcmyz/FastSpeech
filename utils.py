@@ -62,7 +62,7 @@ def get_WaveGlow():
 def get_Tacotron2():
     checkpoint_path = "tacotron2_statedict.pt"
     checkpoint_path = os.path.join(os.path.join(
-        "Tacotron2", "pretrained_model"), checkpoint_path)
+        "tacotron2", "pretrained_model"), checkpoint_path)
 
     model = Tacotron2.model.Tacotron2(
         Tacotron2.hparams.create_hparams()).cuda()

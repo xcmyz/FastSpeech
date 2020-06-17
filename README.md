@@ -1,14 +1,6 @@
 # FastSpeech-Pytorch
 The Implementation of FastSpeech Based on Pytorch.
 
-## Update
-### 2019/10/23
-1. Fix bugs in alignment;
-2. Fix bugs in transformer;
-3. Fix bugs in LengthRegulator;
-4. Change the way to process audio;
-5. Use waveglow to synthesize.
-
 ## Model
 <div align="center">
 <img src="img/model.png" style="max-width:100%;">
@@ -19,15 +11,6 @@ The Implementation of FastSpeech Based on Pytorch.
 - [Details and Rethinking of this Implementation](https://zhuanlan.zhihu.com/p/67939482)
 
 ## Start
-### Dependencies
-- python 3.6
-- CUDA 10.0
-- pytorch==1.1.0
-- nump==1.16.2
-- scipy==1.2.1
-- librosa==0.6.3
-- inflect==2.1.0
-- matplotlib==2.2.2
 
 ### Prepare Dataset
 1. Download and extract [LJSpeech dataset](https://keithito.com/LJ-Speech-Dataset/).

@@ -57,24 +57,24 @@ def main(args):
 
     # Define Some Information
     Time = np.array([])
-    Start = time.clock()
+    Start = time.perf_counter()
 
     # Training
     model = model.train()
 
-    for epoch in range(hp.epochs):
-        # Get Training Loader
-        training_loader = DataLoader(dataset,
-                                     batch_size=hp.batch_size**2,
-                                     shuffle=True,
-                                     collate_fn=collate_fn,
-                                     drop_last=True,
-                                     num_workers=0)
-        total_step = hp.epochs * len(training_loader) * hp.batch_size
+    # Get Training Loader
+    training_loader = DataLoader(dataset,
+                                 batch_size=hp.batch_size**2,
+                                 shuffle=True,
+                                 collate_fn=collate_fn,
+                                 drop_last=True,
+                                 num_workers=0)
+    total_step = hp.epochs * len(training_loader) * hp.batch_size
 
+    for epoch in range(hp.epochs):
         for i, batchs in enumerate(training_loader):
             for j, data_of_batch in enumerate(batchs):
-                start_time = time.clock()
+                start_time = time.perf_counter()
 
                 current_step = i * hp.batch_size + j + args.restore_step + \
                     epoch * len(training_loader)*hp.batch_size + 1
@@ -146,7 +146,7 @@ def main(args):
 
                 # Print
                 if current_step % hp.log_step == 0:
-                    Now = time.clock()
+                    Now = time.perf_counter()
 
                     str1 = "Epoch [{}/{}], Step [{}/{}]:".format(
                         epoch+1, hp.epochs, current_step, total_step)
@@ -174,7 +174,7 @@ def main(args):
                     )}, os.path.join(hp.checkpoint_path, 'checkpoint_%d.pth.tar' % current_step))
                     print("save model at step %d ..." % current_step)
 
-                end_time = time.clock()
+                end_time = time.perf_counter()
                 Time = np.append(Time, end_time - start_time)
                 if len(Time) == hp.clear_Time:
                     temp_value = np.mean(Time)
@@ -184,7 +184,6 @@ def main(args):
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
     parser.add_argument('--restore_step', type=int, default=0)
     parser.add_argument('--frozen_learning_rate', type=bool, default=False)

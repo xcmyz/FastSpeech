@@ -103,12 +103,8 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-__pycache__
-.vscode
-.DS_Store
-
-
 data/train.txt
 model_new/
 mels/
 alignments/
+logger/

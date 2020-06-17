@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from collections import OrderedDict
+from numba import jit
 import numpy as np
 import copy
 import math
@@ -39,6 +40,18 @@ def clones(module, N):
     return nn.ModuleList([copy.deepcopy(module) for _ in range(N)])
 
 
+@jit(nopython=True)
+def create_alignment(base_mat, duration_predictor_output):
+    N, L = duration_predictor_output.shape
+    for i in range(N):
+        count = 0
+        for j in range(L):
+            for k in range(duration_predictor_output[i][j]):
+                base_mat[i][count+k][j] = 1
+            count = count + duration_predictor_output[i][j]
+    return base_mat
+
+
 class LengthRegulator(nn.Module):
     """ Length Regulator """
 
@@ -46,45 +59,32 @@ class LengthRegulator(nn.Module):
         super(LengthRegulator, self).__init__()
         self.duration_predictor = DurationPredictor()
 
-    def LR(self, x, duration_predictor_output, alpha=1.0, mel_max_length=None):
-        output = list()
+    def LR(self, x, duration_predictor_output, mel_max_length=None):
+        expand_max_len = torch.max(
+            torch.sum(duration_predictor_output, -1), -1)[0]
+        alignment = torch.zeros(duration_predictor_output.size(0),
+                                expand_max_len,
+                                duration_predictor_output.size(1)).numpy()
+        alignment = create_alignment(alignment,
+                                     duration_predictor_output.cpu().numpy())
+        alignment = torch.from_numpy(alignment).to(device)
 
-        for batch, expand_target in zip(x, duration_predictor_output):
-            output.append(self.expand(batch, expand_target, alpha))
-
+        output = alignment @ x
         if mel_max_length:
-            output = utils.pad(output, mel_max_length)
-        else:
-            output = utils.pad(output)
-
+            output = F.pad(
+                output, (0, 0, 0, mel_max_length-output.size(1), 0, 0))
         return output
-
-    def expand(self, batch, predicted, alpha):
-        out = list()
-
-        for i, vec in enumerate(batch):
-            expand_size = predicted[i].item()
-            out.append(vec.expand(int(expand_size*alpha), -1))
-        out = torch.cat(out, 0)
-
-        return out
-
-    def rounding(self, num):
-        if num - int(num) >= 0.5:
-            return int(num) + 1
-        else:
-            return int(num)
 
     def forward(self, x, alpha=1.0, target=None, mel_max_length=None):
         duration_predictor_output = self.duration_predictor(x)
 
-        if self.training:
+        if target is not None:
             output = self.LR(x, target, mel_max_length=mel_max_length)
             return output, duration_predictor_output
         else:
-            for idx, ele in enumerate(duration_predictor_output[0]):
-                duration_predictor_output[0][idx] = self.rounding(ele)
-            output = self.LR(x, duration_predictor_output, alpha)
+            duration_predictor_output = (
+                duration_predictor_output * alpha).int()
+            output = self.LR(x, duration_predictor_output)
             mel_pos = torch.stack(
                 [torch.Tensor([i+1 for i in range(output.size(1))])]).long().to(device)
 
@@ -402,3 +402,18 @@ class FFTBlock(torch.nn.Module):
             attns.append(attn)
 
         return x, attns
+
+
+if __name__ == "__main__":
+    # TEST
+    a = torch.Tensor([[2, 3, 4], [1, 2, 3]])
+    b = torch.Tensor([[5, 6, 7], [7, 8, 9]])
+    c = torch.stack([a, b])
+
+    d = torch.Tensor([[1, 4], [6, 3]]).int()
+    expand_max_len = torch.max(torch.sum(d, -1), -1)[0]
+    base = torch.zeros(c.size(0), expand_max_len, c.size(1))
+
+    alignment = create_alignment(base.numpy(), d.numpy())
+    print(alignment)
+    print(torch.from_numpy(alignment) @ c)

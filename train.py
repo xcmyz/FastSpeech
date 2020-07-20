@@ -28,6 +28,9 @@ def main(args):
     print("Model Has Been Defined")
     num_param = utils.get_param_num(model)
     print('Number of TTS Parameters:', num_param)
+    # Get buffer
+    print("Load data to buffer")
+    buffer = get_data_to_buffer()
 
     # Optimizer and loss
     optimizer = torch.optim.Adam(model.parameters(),
@@ -55,9 +58,6 @@ def main(args):
     # Init logger
     if not os.path.exists(hp.logger_path):
         os.mkdir(hp.logger_path)
-
-    # Get buffer
-    buffer = get_data_to_buffer()
 
     # Get dataset
     dataset = BufferDataset(buffer)

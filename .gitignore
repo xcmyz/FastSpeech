@@ -103,8 +103,13 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+# vscode
+.vscode/
+
+data/LJSpeech-1.1
+data/LJSpeech-1.1.tar.bz2
 data/train.txt
-model_new/
-mels/
-alignments/
-logger/
+
+mels
+alignments
+waveglow/pretrained_model

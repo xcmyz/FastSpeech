@@ -2,47 +2,30 @@
 The Implementation of FastSpeech Based on Pytorch.
 
 ## Model
-<div align="center">
-<img src="img/model.png" style="max-width:100%;">
+<div style="text-align: center">
+    <img src="img/model.png" style="max-width:100%;">
 </div>
 
 ## My Blog
 - [FastSpeech Reading Notes](https://zhuanlan.zhihu.com/p/67325775)
 - [Details and Rethinking of this Implementation](https://zhuanlan.zhihu.com/p/67939482)
 
-## Start
-
-### Prepare Dataset
+## Prepare Dataset
 1. Download and extract [LJSpeech dataset](https://keithito.com/LJ-Speech-Dataset/).
 2. Put LJSpeech dataset in `data`.
 3. Unzip `alignments.zip`.
 4. Put [Nvidia pretrained waveglow model](https://drive.google.com/file/d/1WsibBTsuRg_SF2Z6L6NFRTT-NjEy1oTx/view?usp=sharing) in the `waveglow/pretrained_model`;
-5. Run `python preprocess.py`.
-
-*\* if you want to calculate alignment, don't unzip alignments.zip and put [Nvidia pretrained Tacotron2 model](https://drive.google.com/file/d/1c5ZTuT7J08wLUoVZ2KkUs_VdZuJ86ZqA/view?usp=sharing) in the `Tacotron2/pretrained_model`*
+5. Run `python3 preprocess.py`.
 
 ## Training
-Run `python train.py`.
+Run `python3 train.py`.
 
 ## Test
-Run `python synthesis.py`.
-
-## Pretrained Model
-- Baidu: [Step:112000](https://pan.baidu.com/s/1by3-8t3A6uihK8K9IFZ7rg) Enter Code: xpk7
-- OneDrive: [Step:112000](https://1drv.ms/u/s!AuC2oR4FhoZ29kriYhuodY4-gPsT?e=zUIC8G)
+Run `python3 synthesis.py`.
 
 ## Notes
 - In the paper of FastSpeech, authors use pre-trained Transformer-TTS to provide the target of alignment. I didn't have a well-trained Transformer-TTS model so I use Tacotron2 instead.
-- The examples of audio are in `results`.
-- The outputs and alignment of Tacotron2 are shown as follows (The sentence for synthesizing is "I want to go to CMU to do research on deep learning."):
-<div align="center">
-<img src="img/tacotron2_outputs.jpg" style="max-width:100%;">
-</div>
-
-- The outputs of FastSpeech and Tacotron2 (Right one is tacotron2) are shown as follows (The sentence for synthesizing is "Printing, in the only sense with which we are at present concerned, differs from most if not from all the arts and crafts represented in the Exhibition."):
-<div align="center">
-<img src="img/model_test.jpg" style="max-width:100%;">
-</div>
+- The examples of audio are in `sample`.
 
 ## Reference
 - [The Implementation of Tacotron Based on Tensorflow](https://github.com/keithito/tacotron)

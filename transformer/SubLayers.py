@@ -78,10 +78,10 @@ class PositionwiseFeedForward(nn.Module):
         # Use Conv1D
         # position-wise
         self.w_1 = nn.Conv1d(
-            d_in, d_hid, kernel_size=hp.fft_conv1d_kernel, padding=hp.fft_conv1d_padding)
+            d_in, d_hid, kernel_size=hp.fft_conv1d_kernel[0], padding=hp.fft_conv1d_padding)
         # position-wise
         self.w_2 = nn.Conv1d(
-            d_hid, d_in, kernel_size=hp.fft_conv1d_kernel, padding=hp.fft_conv1d_padding)
+            d_hid, d_in, kernel_size=hp.fft_conv1d_kernel[1], padding=hp.fft_conv1d_padding)
 
         self.layer_norm = nn.LayerNorm(d_in)
         self.dropout = nn.Dropout(dropout)

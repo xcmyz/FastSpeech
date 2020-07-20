@@ -3,4 +3,3 @@ import transformer.Modules
 import transformer.Layers
 import transformer.SubLayers
 import transformer.Models
-import transformer.Beam

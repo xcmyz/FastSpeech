@@ -1,11 +1,10 @@
 import torch
 import torch.nn as nn
 import numpy as np
+import hparams as hp
 
 import transformer.Constants as Constants
 from transformer.Layers import FFTBlock, PreNet, PostNet, Linear
-from text.symbols import symbols
-import hparams as hp
 
 
 def get_non_pad_mask(seq):
@@ -51,14 +50,14 @@ class Encoder(nn.Module):
     ''' Encoder '''
 
     def __init__(self,
-                 n_src_vocab=len(symbols)+1,
-                 len_max_seq=hp.max_sep_len,
-                 d_word_vec=hp.word_vec_dim,
+                 n_src_vocab=hp.vocab_size,
+                 len_max_seq=hp.vocab_size,
+                 d_word_vec=hp.encoder_dim,
                  n_layers=hp.encoder_n_layer,
                  n_head=hp.encoder_head,
-                 d_k=64,
-                 d_v=64,
-                 d_model=hp.word_vec_dim,
+                 d_k=hp.encoder_dim // hp.encoder_head,
+                 d_v=hp.encoder_dim // hp.encoder_head,
+                 d_model=hp.encoder_dim,
                  d_inner=hp.encoder_conv1d_filter_size,
                  dropout=hp.dropout):
 
@@ -66,8 +65,9 @@ class Encoder(nn.Module):
 
         n_position = len_max_seq + 1
 
-        self.src_word_emb = nn.Embedding(
-            n_src_vocab, d_word_vec, padding_idx=Constants.PAD)
+        self.src_word_emb = nn.Embedding(n_src_vocab,
+                                         d_word_vec,
+                                         padding_idx=Constants.PAD)
 
         self.position_enc = nn.Embedding.from_pretrained(
             get_sinusoid_encoding_table(n_position, d_word_vec, padding_idx=0),
@@ -102,13 +102,12 @@ class Decoder(nn.Module):
     """ Decoder """
 
     def __init__(self,
-                 len_max_seq=hp.max_sep_len,
-                 d_word_vec=hp.word_vec_dim,
+                 len_max_seq=hp.max_seq_len,
                  n_layers=hp.decoder_n_layer,
                  n_head=hp.decoder_head,
-                 d_k=64,
-                 d_v=64,
-                 d_model=hp.word_vec_dim,
+                 d_k=hp.decoder_dim // hp.decoder_head,
+                 d_v=hp.decoder_dim // hp.decoder_head,
+                 d_model=hp.decoder_dim,
                  d_inner=hp.decoder_conv1d_filter_size,
                  dropout=hp.dropout):
 
@@ -117,7 +116,7 @@ class Decoder(nn.Module):
         n_position = len_max_seq + 1
 
         self.position_enc = nn.Embedding.from_pretrained(
-            get_sinusoid_encoding_table(n_position, d_word_vec, padding_idx=0),
+            get_sinusoid_encoding_table(n_position, d_model, padding_idx=0),
             freeze=True)
 
         self.layer_stack = nn.ModuleList([FFTBlock(

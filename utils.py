@@ -2,12 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-import matplotlib
-import matplotlib.pyplot as plt
 import os
 
-import tacotron2 as Tacotron2
-import text
 import hparams
 
 
@@ -25,23 +21,12 @@ def get_param_num(model):
     return num_param
 
 
-def plot_data(data, figsize=(12, 4)):
-    _, axes = plt.subplots(1, len(data), figsize=figsize)
-    for i in range(len(data)):
-        axes[i].imshow(data[i], aspect='auto',
-                       origin='bottom', interpolation='none')
-
-    if not os.path.exists("img"):
-        os.mkdir("img")
-    plt.savefig(os.path.join("img", "model_test.jpg"))
-
-
 def get_mask_from_lengths(lengths, max_len=None):
     if max_len == None:
         max_len = torch.max(lengths).item()
 
     ids = torch.arange(0, max_len, out=torch.cuda.LongTensor(max_len))
-    mask = (ids < lengths.unsqueeze(1)).byte()
+    mask = (ids < lengths.unsqueeze(1)).bool()
 
     return mask
 
@@ -59,29 +44,6 @@ def get_WaveGlow():
     return wave_glow
 
 
-def get_Tacotron2():
-    checkpoint_path = "tacotron2_statedict.pt"
-    checkpoint_path = os.path.join(os.path.join(
-        "tacotron2", "pretrained_model"), checkpoint_path)
-
-    model = Tacotron2.model.Tacotron2(
-        Tacotron2.hparams.create_hparams()).cuda()
-    model.load_state_dict(torch.load(checkpoint_path)['state_dict'])
-    _ = model.cuda().eval()
-
-    return model
-
-
-def get_D(alignment):
-    D = np.array([0 for _ in range(np.shape(alignment)[1])])
-
-    for i in range(np.shape(alignment)[0]):
-        max_index = alignment[i].tolist().index(alignment[i].max())
-        D[max_index] = D[max_index] + 1
-
-    return D
-
-
 def pad_1D(inputs, PAD=0):
 
     def pad_data(x, length, PAD):
@@ -92,6 +54,18 @@ def pad_1D(inputs, PAD=0):
 
     max_len = max((len(x) for x in inputs))
     padded = np.stack([pad_data(x, max_len, PAD) for x in inputs])
+
+    return padded
+
+
+def pad_1D_tensor(inputs, PAD=0):
+
+    def pad_data(x, length, PAD):
+        x_padded = F.pad(x, (0, length - x.shape[0]))
+        return x_padded
+
+    max_len = max((len(x) for x in inputs))
+    padded = torch.stack([pad_data(x, max_len, PAD) for x in inputs])
 
     return padded
 
@@ -118,6 +92,25 @@ def pad_2D(inputs, maxlen=None):
     return output
 
 
+def pad_2D_tensor(inputs, maxlen=None):
+
+    def pad(x, max_len):
+        if x.size(0) > max_len:
+            raise ValueError("not max_len")
+
+        s = x.size(1)
+        x_padded = F.pad(x, (0, 0, 0, max_len-x.size(0)))
+        return x_padded[:, :s]
+
+    if maxlen:
+        output = torch.stack([pad(x, maxlen) for x in inputs])
+    else:
+        max_len = max(x.size(0) for x in inputs)
+        output = torch.stack([pad(x, max_len) for x in inputs])
+
+    return output
+
+
 def pad(input_ele, mel_max_length=None):
     if mel_max_length:
         out_list = list()
@@ -138,46 +131,3 @@ def pad(input_ele, mel_max_length=None):
             out_list.append(one_batch_padded)
         out_padded = torch.stack(out_list)
         return out_padded
-
-
-def load_data(txt, mel, model):
-    character = text.text_to_sequence(txt, hparams.text_cleaners)
-    character = torch.from_numpy(np.stack([np.array(character)])).long().cuda()
-
-    text_length = torch.Tensor([character.size(1)]).long().cuda()
-    mel = torch.from_numpy(np.stack([mel.T])).float().cuda()
-    max_len = mel.size(2)
-    output_length = torch.Tensor([max_len]).long().cuda()
-
-    inputs = character, text_length, mel, max_len, output_length
-
-    with torch.no_grad():
-        [_, mel_tacotron2, _, alignment], cemb = model.forward(inputs)
-
-    alignment = alignment[0].cpu().numpy()
-    cemb = cemb[0].cpu().numpy()
-
-    D = get_D(alignment)
-    D = np.array(D)
-
-    mel_tacotron2 = mel_tacotron2[0].cpu().numpy()
-
-    return mel_tacotron2, cemb, D
-
-
-def load_data_from_tacotron2(txt, model):
-    character = text.text_to_sequence(txt, hparams.text_cleaners)
-    character = torch.from_numpy(np.stack([np.array(character)])).long().cuda()
-
-    with torch.no_grad():
-        [_, mel, _, alignment], cemb = model.inference(character)
-
-    alignment = alignment[0].cpu().numpy()
-    cemb = cemb[0].cpu().numpy()
-
-    D = get_D(alignment)
-    D = np.array(D)
-
-    mel = mel[0].cpu().numpy()
-
-    return mel, cemb, D

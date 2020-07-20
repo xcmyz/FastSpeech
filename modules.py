@@ -126,15 +126,31 @@ class DurationPredictor(nn.Module):
     def forward(self, encoder_output):
         out = self.conv_layer(encoder_output)
         out = self.linear_layer(out)
-
         out = self.relu(out)
-
         out = out.squeeze()
-
         if not self.training:
             out = out.unsqueeze(0)
-
         return out
+
+
+class BatchNormConv1d(nn.Module):
+    def __init__(self, in_dim, out_dim, kernel_size, stride, padding,
+                 activation=None, w_init_gain='linear'):
+        super(BatchNormConv1d, self).__init__()
+        self.conv1d = nn.Conv1d(in_dim, out_dim,
+                                kernel_size=kernel_size,
+                                stride=stride, padding=padding, bias=False)
+        self.bn = nn.BatchNorm1d(out_dim)
+        self.activation = activation
+
+        torch.nn.init.xavier_uniform_(
+            self.conv1d.weight, gain=torch.nn.init.calculate_gain(w_init_gain))
+
+    def forward(self, x):
+        x = self.conv1d(x)
+        if self.activation is not None:
+            x = self.activation(x)
+        return self.bn(x)
 
 
 class Conv(nn.Module):
@@ -205,203 +221,124 @@ class Linear(nn.Module):
         return self.linear_layer(x)
 
 
-class FFN(nn.Module):
+class Highway(nn.Module):
+    def __init__(self, in_size, out_size):
+        super(Highway, self).__init__()
+        self.H = nn.Linear(in_size, out_size)
+        self.H.bias.data.zero_()
+        self.T = nn.Linear(in_size, out_size)
+        self.T.bias.data.fill_(-1)
+        self.relu = nn.ReLU()
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, inputs):
+        H = self.relu(self.H(inputs))
+        T = self.sigmoid(self.T(inputs))
+        return H * T + inputs * (1.0 - T)
+
+
+class Prenet(nn.Module):
     """
-    Positionwise Feed-Forward Network
-    """
-
-    def __init__(self, num_hidden):
-        """
-        :param num_hidden: dimension of hidden 
-        """
-        super(FFN, self).__init__()
-        self.w_1 = Conv(num_hidden, num_hidden * 4,
-                        kernel_size=3, padding=1, w_init='relu')
-        self.w_2 = Conv(num_hidden * 4, num_hidden, kernel_size=3, padding=1)
-        self.dropout = nn.Dropout(p=0.1)
-        self.layer_norm = nn.LayerNorm(num_hidden)
-
-    def forward(self, input_):
-        # FFN Network
-        x = input_
-        x = self.w_2(torch.relu(self.w_1(x)))
-
-        # residual connection
-        x = x + input_
-
-        # dropout
-        x = self.dropout(x)
-
-        # layer normalization
-        x = self.layer_norm(x)
-
-        return x
-
-
-class MultiheadAttention(nn.Module):
-    """
-    Multihead attention mechanism (dot attention)
+    Prenet before passing through the network
     """
 
-    def __init__(self, num_hidden_k):
-        """
-        :param num_hidden_k: dimension of hidden 
-        """
-        super(MultiheadAttention, self).__init__()
+    def __init__(self, input_size, hidden_size, output_size):
+        super(Prenet, self).__init__()
+        self.input_size = input_size
+        self.output_size = output_size
+        self.hidden_size = hidden_size
+        self.layer = nn.Sequential(OrderedDict([
+            ('fc1', Linear(self.input_size, self.hidden_size)),
+            ('relu1', nn.ReLU()),
+            ('dropout1', nn.Dropout(0.5)),
+            ('fc2', Linear(self.hidden_size, self.output_size)),
+            ('relu2', nn.ReLU()),
+            ('dropout2', nn.Dropout(0.5)),
+        ]))
 
-        self.num_hidden_k = num_hidden_k
-        self.attn_dropout = nn.Dropout(p=0.1)
-
-    def forward(self, key, value, query, mask=None, query_mask=None):
-        # Get attention score
-        attn = torch.bmm(query, key.transpose(1, 2))
-        attn = attn / math.sqrt(self.num_hidden_k)
-
-        # Masking to ignore padding (key side)
-        if mask is not None:
-            attn = attn.masked_fill(mask, -2 ** 32 + 1)
-            attn = torch.softmax(attn, dim=-1)
-        else:
-            attn = torch.softmax(attn, dim=-1)
-
-        # Masking to ignore padding (query side)
-        if query_mask is not None:
-            attn = attn * query_mask
-
-        # Dropout
-        attn = self.attn_dropout(attn)
-
-        # Get Context Vector
-        result = torch.bmm(attn, value)
-
-        return result, attn
+    def forward(self, x):
+        out = self.layer(x)
+        return out
 
 
-class Attention(nn.Module):
-    """
-    Attention Network
+class CBHG(nn.Module):
+    """CBHG module: a recurrent neural network composed of:
+        - 1-d convolution banks
+        - Highway networks + residual connections
+        - Bidirectional gated recurrent units
     """
 
-    def __init__(self, num_hidden, h=2):
-        """
-        :param num_hidden: dimension of hidden
-        :param h: num of heads 
-        """
-        super(Attention, self).__init__()
+    def __init__(self, in_dim, K=16, projections=[128, 128]):
+        super(CBHG, self).__init__()
+        self.in_dim = in_dim
+        self.relu = nn.ReLU()
+        self.conv1d_banks = nn.ModuleList(
+            [BatchNormConv1d(in_dim, in_dim, kernel_size=k, stride=1,
+                             padding=k // 2, activation=self.relu)
+             for k in range(1, K + 1)])
+        self.max_pool1d = nn.MaxPool1d(kernel_size=2, stride=1, padding=1)
 
-        self.num_hidden = num_hidden
-        self.num_hidden_per_attn = num_hidden // h
-        self.h = h
+        in_sizes = [K * in_dim] + projections[:-1]
+        activations = [self.relu] * (len(projections) - 1) + [None]
+        self.conv1d_projections = nn.ModuleList(
+            [BatchNormConv1d(in_size, out_size, kernel_size=3, stride=1,
+                             padding=1, activation=ac)
+             for (in_size, out_size, ac) in zip(
+                 in_sizes, projections, activations)])
 
-        self.key = Linear(num_hidden, num_hidden, bias=False)
-        self.value = Linear(num_hidden, num_hidden, bias=False)
-        self.query = Linear(num_hidden, num_hidden, bias=False)
+        self.pre_highway = nn.Linear(projections[-1], in_dim, bias=False)
+        self.highways = nn.ModuleList(
+            [Highway(in_dim, in_dim) for _ in range(4)])
 
-        self.multihead = MultiheadAttention(self.num_hidden_per_attn)
+        self.gru = nn.GRU(
+            in_dim, in_dim, 1, batch_first=True, bidirectional=True)
 
-        self.residual_dropout = nn.Dropout(p=0.1)
+    def forward(self, inputs, input_lengths=None):
+        # (B, T_in, in_dim)
+        x = inputs
 
-        self.final_linear = Linear(num_hidden * 2, num_hidden)
+        # Needed to perform conv1d on time-axis
+        # (B, in_dim, T_in)
+        if x.size(-1) == self.in_dim:
+            x = x.transpose(1, 2)
 
-        self.layer_norm_1 = nn.LayerNorm(num_hidden)
+        T = x.size(-1)
 
-    def forward(self, memory, decoder_input, mask=None, query_mask=None):
+        # (B, in_dim*K, T_in)
+        # Concat conv1d bank outputs
+        x = torch.cat([conv1d(x)[:, :, :T]
+                       for conv1d in self.conv1d_banks], dim=1)
+        assert x.size(1) == self.in_dim * len(self.conv1d_banks)
+        x = self.max_pool1d(x)[:, :, :T]
 
-        batch_size = memory.size(0)
-        seq_k = memory.size(1)
-        seq_q = decoder_input.size(1)
+        for conv1d in self.conv1d_projections:
+            x = conv1d(x)
 
-        # Repeat masks h times
-        if query_mask is not None:
-            query_mask = query_mask.unsqueeze(-1).repeat(1, 1, seq_k)
-            query_mask = query_mask.repeat(self.h, 1, 1)
-        if mask is not None:
-            mask = mask.repeat(self.h, 1, 1)
+        # (B, T_in, in_dim)
+        # Back to the original shape
+        x = x.transpose(1, 2)
 
-        # Make multihead
-        key = self.key(memory).view(batch_size,
-                                    seq_k,
-                                    self.h,
-                                    self.num_hidden_per_attn)
-        value = self.value(memory).view(batch_size,
-                                        seq_k,
-                                        self.h,
-                                        self.num_hidden_per_attn)
-        query = self.query(decoder_input).view(batch_size,
-                                               seq_q,
-                                               self.h,
-                                               self.num_hidden_per_attn)
+        if x.size(-1) != self.in_dim:
+            x = self.pre_highway(x)
 
-        key = key.permute(2, 0, 1, 3).contiguous().view(-1,
-                                                        seq_k,
-                                                        self.num_hidden_per_attn)
-        value = value.permute(2, 0, 1, 3).contiguous().view(-1,
-                                                            seq_k,
-                                                            self.num_hidden_per_attn)
-        query = query.permute(2, 0, 1, 3).contiguous().view(-1,
-                                                            seq_q,
-                                                            self.num_hidden_per_attn)
+        # Residual connection
+        x += inputs
+        for highway in self.highways:
+            x = highway(x)
 
-        # Get context vector
-        result, attns = self.multihead(
-            key, value, query, mask=mask, query_mask=query_mask)
+        if input_lengths is not None:
+            x = nn.utils.rnn.pack_padded_sequence(
+                x, input_lengths, batch_first=True)
 
-        # Concatenate all multihead context vector
-        result = result.view(self.h, batch_size, seq_q,
-                             self.num_hidden_per_attn)
-        result = result.permute(1, 2, 0, 3).contiguous().view(
-            batch_size, seq_q, -1)
+        # (B, T_in, in_dim*2)
+        self.gru.flatten_parameters()
+        outputs, _ = self.gru(x)
 
-        # Concatenate context vector with input (most important)
-        result = torch.cat([decoder_input, result], dim=-1)
+        if input_lengths is not None:
+            outputs, _ = nn.utils.rnn.pad_packed_sequence(
+                outputs, batch_first=True)
 
-        # Final linear
-        result = self.final_linear(result)
-
-        # Residual dropout & connection
-        result = self.residual_dropout(result)
-        result = result + decoder_input
-
-        # Layer normalization
-        result = self.layer_norm_1(result)
-
-        return result, attns
-
-
-class FFTBlock(torch.nn.Module):
-    """FFT Block"""
-
-    def __init__(self,
-                 d_model,
-                 n_head=hp.Head):
-        super(FFTBlock, self).__init__()
-        self.slf_attn = clones(Attention(d_model), hp.N)
-        self.pos_ffn = clones(FFN(d_model), hp.N)
-
-        self.pos_emb = nn.Embedding.from_pretrained(get_sinusoid_encoding_table(1024,
-                                                                                d_model,
-                                                                                padding_idx=0), freeze=True)
-
-    def forward(self, x, pos, return_attns=False):
-        # Get character mask
-        if self.training:
-            c_mask = pos.ne(0).type(torch.float)
-            mask = pos.eq(0).unsqueeze(1).repeat(1, x.size(1), 1)
-        else:
-            c_mask, mask = None, None
-
-        # Get positional embedding, apply alpha and add
-        pos = self.pos_emb(pos)
-        x = x + pos
-
-        # Attention encoder-encoder
-        attns = list()
-        for slf_attn, ffn in zip(self.slf_attn, self.pos_ffn):
-            x, attn = slf_attn(x, x, mask=mask, query_mask=c_mask)
-            x = ffn(x)
-            attns.append(attn)
-
-        return x, attns
+        return outputs
 
 
 if __name__ == "__main__":

@@ -17,7 +17,7 @@ decoder_head = 2
 decoder_conv1d_filter_size = 1024
 
 fft_conv1d_kernel = (9, 1)
-fft_conv1d_padding = 4
+fft_conv1d_padding = (4, 0)
 
 duration_predictor_filter_size = 256
 duration_predictor_kernel_size = 3

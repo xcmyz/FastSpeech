@@ -3,26 +3,22 @@ num_mels = 80
 text_cleaners = ['english_cleaners']
 
 # FastSpeech
-vocab_size = 1024
-N = 6
-Head = 2
-d_model = 384
-duration_predictor_filter_size = 256
-duration_predictor_kernel_size = 3
-dropout = 0.1
+vocab_size = 300
+max_seq_len = 3000
 
-word_vec_dim = 384
-encoder_n_layer = 6
+encoder_dim = 256
+encoder_n_layer = 4
 encoder_head = 2
-encoder_conv1d_filter_size = 1536
-max_sep_len = 2048
-encoder_output_size = 384
-decoder_n_layer = 6
+encoder_conv1d_filter_size = 1024
+
+decoder_dim = 256
+decoder_n_layer = 4
 decoder_head = 2
-decoder_conv1d_filter_size = 1536
-decoder_output_size = 384
-fft_conv1d_kernel = 3
-fft_conv1d_padding = 1
+decoder_conv1d_filter_size = 1024
+
+fft_conv1d_kernel = (9, 1)
+fft_conv1d_padding = 4
+
 duration_predictor_filter_size = 256
 duration_predictor_kernel_size = 3
 dropout = 0.1

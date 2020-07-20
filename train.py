@@ -80,7 +80,6 @@ def main(args):
 
     for epoch in range(hp.epochs):
         for i, batchs in enumerate(training_loader):
-            # print("load {:d} batchs.".format(len(batchs)))
             # real batch start here
             for j, db in enumerate(batchs):
                 start_time = time.perf_counter()

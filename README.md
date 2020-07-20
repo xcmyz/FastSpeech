@@ -20,8 +20,8 @@ The Implementation of FastSpeech Based on Pytorch.
 ## Training
 Run `python3 train.py`.
 
-## Test
-Run `python3 synthesis.py`.
+## Evaluation
+Run `python3 eval.py`.
 
 ## Notes
 - In the paper of FastSpeech, authors use pre-trained Transformer-TTS to provide the target of alignment. I didn't have a well-trained Transformer-TTS model so I use Tacotron2 instead.

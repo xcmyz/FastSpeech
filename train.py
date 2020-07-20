@@ -37,7 +37,7 @@ def main(args):
                                  betas=(0.9, 0.98),
                                  eps=1e-9)
     scheduled_optim = ScheduledOptim(optimizer,
-                                     hp.d_model,
+                                     hp.decoder_dim,
                                      hp.n_warm_up_step,
                                      args.restore_step)
     fastspeech_loss = DNNLoss().to(device)

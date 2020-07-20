@@ -97,7 +97,7 @@ class DurationPredictor(nn.Module):
     def __init__(self):
         super(DurationPredictor, self).__init__()
 
-        self.input_size = hp.d_model
+        self.input_size = hp.encoder_dim
         self.filter_size = hp.duration_predictor_filter_size
         self.kernel = hp.duration_predictor_kernel_size
         self.conv_output_size = hp.duration_predictor_filter_size

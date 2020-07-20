@@ -3,7 +3,7 @@ The Implementation of FastSpeech Based on Pytorch.
 
 ## Model
 <div style="text-align: center">
-    <img src="img/model.png" style="max-width:100%;">
+    <img src="img/fastspeech_structure.png" style="max-width:100%;">
 </div>
 
 ## My Blog

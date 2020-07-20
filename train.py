@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 from multiprocessing import cpu_count
 import numpy as np
@@ -8,9 +9,10 @@ import os
 import time
 import math
 
-from fastspeech import FastSpeech
-from loss import FastSpeechLoss
-from dataset import FastSpeechDataset, collate_fn, DataLoader
+from model import FastSpeech
+from loss import DNNLoss
+from dataset import BufferDataset, DataLoader
+from dataset import get_data_to_buffer, collate_fn_tensor
 from optimizer import ScheduledOptim
 import hparams as hp
 import utils
@@ -21,22 +23,21 @@ def main(args):
     device = torch.device('cuda'if torch.cuda.is_available()else 'cpu')
 
     # Define model
+    print("Use FastSpeech")
     model = nn.DataParallel(FastSpeech()).to(device)
     print("Model Has Been Defined")
     num_param = utils.get_param_num(model)
-    print('Number of FastSpeech Parameters:', num_param)
-
-    # Get dataset
-    dataset = FastSpeechDataset()
+    print('Number of TTS Parameters:', num_param)
 
     # Optimizer and loss
-    optimizer = torch.optim.Adam(
-        model.parameters(), betas=(0.9, 0.98), eps=1e-9)
+    optimizer = torch.optim.Adam(model.parameters(),
+                                 betas=(0.9, 0.98),
+                                 eps=1e-9)
     scheduled_optim = ScheduledOptim(optimizer,
                                      hp.d_model,
                                      hp.n_warm_up_step,
                                      args.restore_step)
-    fastspeech_loss = FastSpeechLoss().to(device)
+    fastspeech_loss = DNNLoss().to(device)
     print("Defined Optimizer and Loss Function.")
 
     # Load checkpoint if exists
@@ -55,6 +56,21 @@ def main(args):
     if not os.path.exists(hp.logger_path):
         os.mkdir(hp.logger_path)
 
+    # Get buffer
+    buffer = get_data_to_buffer()
+
+    # Get dataset
+    dataset = BufferDataset(buffer)
+
+    # Get Training Loader
+    training_loader = DataLoader(dataset,
+                                 batch_size=hp.batch_expand_size * hp.batch_size,
+                                 shuffle=True,
+                                 collate_fn=collate_fn_tensor,
+                                 drop_last=True,
+                                 num_workers=0)
+    total_step = hp.epochs * len(training_loader) * hp.batch_expand_size
+
     # Define Some Information
     Time = np.array([])
     Start = time.perf_counter()
@@ -62,54 +78,40 @@ def main(args):
     # Training
     model = model.train()
 
-    # Get Training Loader
-    training_loader = DataLoader(dataset,
-                                 batch_size=hp.batch_size**2,
-                                 shuffle=True,
-                                 collate_fn=collate_fn,
-                                 drop_last=True,
-                                 num_workers=0)
-    total_step = hp.epochs * len(training_loader) * hp.batch_size
-
     for epoch in range(hp.epochs):
         for i, batchs in enumerate(training_loader):
-            for j, data_of_batch in enumerate(batchs):
+            # print("load {:d} batchs.".format(len(batchs)))
+            # real batch start here
+            for j, db in enumerate(batchs):
                 start_time = time.perf_counter()
 
-                current_step = i * hp.batch_size + j + args.restore_step + \
-                    epoch * len(training_loader)*hp.batch_size + 1
+                current_step = i * hp.batch_expand_size + j + args.restore_step + \
+                    epoch * len(training_loader) * hp.batch_expand_size + 1
 
                 # Init
                 scheduled_optim.zero_grad()
 
                 # Get Data
-                character = torch.from_numpy(
-                    data_of_batch["text"]).long().to(device)
-                mel_target = torch.from_numpy(
-                    data_of_batch["mel_target"]).float().to(device)
-                D = torch.from_numpy(data_of_batch["D"]).int().to(device)
-                mel_pos = torch.from_numpy(
-                    data_of_batch["mel_pos"]).long().to(device)
-                src_pos = torch.from_numpy(
-                    data_of_batch["src_pos"]).long().to(device)
-                max_mel_len = data_of_batch["mel_max_len"]
+                character = db["text"].long().to(device)
+                mel_target = db["mel_target"].float().to(device)
+                duration = db["duration"].int().to(device)
+                mel_pos = db["mel_pos"].long().to(device)
+                src_pos = db["src_pos"].long().to(device)
+                max_mel_len = db["mel_max_len"]
 
                 # Forward
                 mel_output, mel_postnet_output, duration_predictor_output = model(character,
                                                                                   src_pos,
                                                                                   mel_pos=mel_pos,
                                                                                   mel_max_length=max_mel_len,
-                                                                                  length_target=D)
-
-                # print(mel_target.size())
-                # print(mel_output.size())
+                                                                                  length_target=duration)
 
                 # Cal Loss
                 mel_loss, mel_postnet_loss, duration_loss = fastspeech_loss(mel_output,
                                                                             mel_postnet_output,
                                                                             duration_predictor_output,
                                                                             mel_target,
-                                                                            D)
+                                                                            duration)
                 total_loss = mel_loss + mel_postnet_loss + duration_loss
 
                 # Logger
@@ -189,5 +191,4 @@ if __name__ == "__main__":
     parser.add_argument('--frozen_learning_rate', type=bool, default=False)
     parser.add_argument("--learning_rate_frozen", type=float, default=1e-3)
     args = parser.parse_args()
-
     main(args)

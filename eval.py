@@ -20,7 +20,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def get_DNN(num):
     checkpoint_path = "checkpoint_" + str(num) + ".pth.tar"
-    model = nn.DataParallel(M.DurIAN()).to(device)
+    model = nn.DataParallel(M.FastSpeech()).to(device)
     model.load_state_dict(torch.load(os.path.join(hp.checkpoint_path,
                                                   checkpoint_path))['model'])
     model.eval()

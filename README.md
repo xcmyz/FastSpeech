@@ -1,6 +1,13 @@
 # FastSpeech-Pytorch
 The Implementation of FastSpeech Based on Pytorch.
 
+## Update (2020/07/20)
+1. Optimize the training process.
+2. Optimize the implementation of length regulator.
+3. Use the same hyper parameter as FastSpeech2.
+4. **The measures of the 1, 2 and 3 make the training process 3 times faster than before.**
+5. **Better speech quality.**
+
 ## Model
 <div style="text-align: center">
     <img src="img/fastspeech_structure.png" style="max-width:100%;">

@@ -33,3 +33,4 @@ Run `python3 eval.py`.
 - [The Implementation of Transformer Based on Pytorch](https://github.com/jadore801120/attention-is-all-you-need-pytorch)
 - [The Implementation of Transformer-TTS Based on Pytorch](https://github.com/xcmyz/Transformer-TTS)
 - [The Implementation of Tacotron2 Based on Pytorch](https://github.com/NVIDIA/tacotron2)
+- [The Implementation of FastSpeech2 Based on Pytorch](https://github.com/ming024/FastSpeech2)

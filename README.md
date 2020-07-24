@@ -34,7 +34,7 @@ Run `python3 eval.py`.
 - In the paper of FastSpeech, authors use pre-trained Transformer-TTS model to provide the target of alignment. I didn't have a well-trained Transformer-TTS model so I use Tacotron2 instead.
 - I use the same hyper-parameter as [FastSpeech2](https://arxiv.org/abs/2006.04558).
 - The examples of audio are in `sample`.
-- [pretrained model](https://drive.google.com/file/d/1vMrKtbjPj9u_o3Y-8prE6hHCc6Yj4Nqk/view?usp=sharing)
+- [pretrained model](https://drive.google.com/file/d/1vMrKtbjPj9u_o3Y-8prE6hHCc6Yj4Nqk/view?usp=sharing).
 
 ## Reference
 

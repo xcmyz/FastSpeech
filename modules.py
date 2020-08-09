@@ -40,7 +40,7 @@ def clones(module, N):
     return nn.ModuleList([copy.deepcopy(module) for _ in range(N)])
 
 
-@jit(nopython=True)
+# @jit(nopython=True)
 def create_alignment(base_mat, duration_predictor_output):
     N, L = duration_predictor_output.shape
     for i in range(N):

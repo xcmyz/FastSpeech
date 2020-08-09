@@ -78,3 +78,11 @@ if __name__ == "__main__":
             mel_cuda, WaveGlow,
             "results/"+str(args.step)+"_"+str(i)+"_waveglow.wav")
         print("Done", i + 1)
+
+    s_t = time.perf_counter()
+    for i in range(100):
+        for _, phn in enumerate(data_list):
+            _, _, = synthesis(model, phn, args.alpha)
+        print(i)
+    e_t = time.perf_counter()
+    print((e_t - s_t) / 100.)

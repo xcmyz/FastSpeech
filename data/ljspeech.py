@@ -9,20 +9,25 @@ from concurrent.futures import ProcessPoolExecutor
 
 def build_from_path(in_dir, out_dir):
     index = 1
-    executor = ProcessPoolExecutor(max_workers=4)
-    futures = []
+    # executor = ProcessPoolExecutor(max_workers=4)
+    # futures = []
+    texts = []
 
     with open(os.path.join(in_dir, 'metadata.csv'), encoding='utf-8') as f:
         for line in f.readlines():
+            if index % 100 == 0:
+                print("{:d} Done".format(index))
             parts = line.strip().split('|')
             wav_path = os.path.join(in_dir, 'wavs', '%s.wav' % parts[0])
             text = parts[2]
-            futures.append(executor.submit(
-                partial(_process_utterance, out_dir, index, wav_path, text)))
+            # futures.append(executor.submit(
+            #     partial(_process_utterance, out_dir, index, wav_path, text)))
+            texts.append(_process_utterance(out_dir, index, wav_path, text))
 
             index = index + 1
 
-    return [future.result() for future in tqdm(futures)]
+    # return [future.result() for future in tqdm(futures)]
+    return texts
 
 
 def _process_utterance(out_dir, index, wav_path, text):

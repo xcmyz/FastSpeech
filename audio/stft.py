@@ -1,3 +1,5 @@
+""" from https://github.com/NVIDIA/tacotron2 """
+
 import torch
 import torch.nn.functional as F
 from torch.autograd import Variable

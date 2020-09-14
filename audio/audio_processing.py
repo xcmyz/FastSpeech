@@ -1,3 +1,5 @@
+""" from https://github.com/NVIDIA/tacotron2 """
+
 import torch
 import numpy as np
 from scipy.signal import get_window

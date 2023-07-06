@@ -1,6 +1,6 @@
 torch==1.2.0
 numpy==1.22.0
-scipy==1.4.1
+scipy==1.10.0
 librosa==0.7.2
 inflect==0.2.5
 numba==0.48.0
